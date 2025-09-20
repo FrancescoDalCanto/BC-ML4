@@ -1,0 +1,7 @@
+space + f => cerca nella cartella in cui sei
+shift + d (sul file) => cancella
+e => crea file
+w => save
+q => quit
+contro + n => cartella sulla sinistra
+space + h => terminale 
