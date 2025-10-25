@@ -1,0 +1,19 @@
+# File di sistema macOS
+.DS_Store
+
+# Cartella ambiente virtuale Python
+venv/
+
+# Cartella di configurazione git
+.git/
+
+# File e directory log o temporanee
+*.log
+__pycache__/
+*.pyc
+
+# Escludi altri file temporanei o di backup
+*~
+
+
+
