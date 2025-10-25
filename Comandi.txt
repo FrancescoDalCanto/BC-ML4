@@ -1,0 +1,18 @@
+space + f => cerca nella cartella in cui sei
+shift + d (sul file) => cancella
+e => crea file
+w => save
+q => quit
+contro + n => cartella sulla sinistra
+space + h => terminale 
+
+
+
+
+// PER ESEGUIRE E CHIUDERE L'ALMBIENTE:
+  avvio: source venv/bin/activate
+  chiusura: deactivate
+
+
+// Comando per installare Pythorc
+pip install torch torchvision torchaudio
