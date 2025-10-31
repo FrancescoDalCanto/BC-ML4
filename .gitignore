@@ -15,5 +15,5 @@ __pycache__/
 # Escludi altri file temporanei o di backup
 *~
 
-
-
+# Dataset - non caricare su GitHub
+dataset/
