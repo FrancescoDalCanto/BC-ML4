@@ -2,7 +2,7 @@
 .DS_Store
 
 # Cartella ambiente virtuale Python
-venv/
+myenv/
 
 # Cartella di configurazione git
 .git/
