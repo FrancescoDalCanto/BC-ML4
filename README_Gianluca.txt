@@ -33,4 +33,5 @@ TemporalResolution 4
 TemporalResolution 5
 Ho lasciato questi campi per aiutarci a fare "debugging" se durante lo svolgimento della tesi avessimo dei problemi, tu li puoi ignorare.
 
-Infine, il file Advanced-MRI-Breast-Lesions-DA-Clinical-Sep2024 LEGENDA contiene la descrizione delle feature relative isTN, HER2, KI67, ER e PR. È il file che abbiamo guardato assieme durante il ricevimento per vedere il sistema di categorizzazione dei vari campi.
+Infine, il file Advanced-MRI-Breast-Lesions-DA-Clinical-Sep2024 LEGENDA contiene la descrizione delle feature relative isTN, HER2, KI67, ER e PR.
+È il file che abbiamo guardato assieme durante il ricevimento per vedere il sistema di categorizzazione dei vari campi.
