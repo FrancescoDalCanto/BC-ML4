@@ -17,3 +17,7 @@ __pycache__/
 
 # Dataset - non caricare su GitHub
 dataset/
+
+
+# Diario - non caricare su GitHub
+Diario/

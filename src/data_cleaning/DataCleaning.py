@@ -64,7 +64,7 @@ def standardizzazione_ki67(val):
         Gestisce valori misti
     """
     if 'to' in val_str:
-        # Intervalli numerici: "20 to 25" → media
+        # Intervalli numerici: "20 to 25" lo imposto come  media
         try:
             parts = val_str.split('to')
             num1 = float(parts[0].strip())
@@ -75,11 +75,11 @@ def standardizzazione_ki67(val):
         
         # Intervalli categorici: "low to intermediate"
         if 'low' in val_str and 'intermediate' in val_str:
-            return 20  # Media(15, 25) ≈ 20
+            return 20  # Media(15, 25) = 20
         elif 'intermediate' in val_str and 'high' in val_str:
-            return 36.5  # Media(23, 50) ≈ 36.5
+            return 36.5  # Media(23, 50) = 36.5
         elif 'low' in val_str and 'high' in val_str:
-            return 32.5  # Media(15, 50) ≈ 32.5
+            return 32.5  # Media(15, 50) = 32.5
     
     """
         Gestisce una stringa
@@ -244,21 +244,8 @@ def process_all_file():
         print(Fore.RED + f"ERRORE generale: {e}")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# **************************************
+#   Avvio del programma per la Pulizia
+# **************************************
 if __name__ == "__main__":
     process_all_file()
