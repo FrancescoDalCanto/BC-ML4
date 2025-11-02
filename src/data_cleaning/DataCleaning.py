@@ -1,13 +1,13 @@
 import pandas as pd
 from pathlib import Path
 import numpy as np
-
+from scipy import stats
 
 from colorama import Fore, init
 # Resetto il colore dopo ogni print
 init(autoreset=True)
 
-
+from ValidationDataset import validation
 
 # Percorso della CARTELLA dataset
 DATASET_PATH = Path('/Users/francesco/Tesi/BC-ML4/dataset')
@@ -45,6 +45,10 @@ colonne_da_rimuovere = [
         'TemporalResolution 5'
         ]
 
+
+# **************************************
+#   Funzione per standardizzare il ki-67
+# **************************************
 def standardizzazione_ki67(val):
     if pd.isna(val):
         return np.nan
@@ -100,6 +104,10 @@ def standardizzazione_ki67(val):
     except:
         return np.nan
 
+
+# **************************************
+#   Funzione per la pulire il dataset
+# **************************************
 def clean_dataset(dataset):
 
     """
@@ -122,8 +130,6 @@ def clean_dataset(dataset):
             # Limito il valore tra 0-3
             dataset[index] = dataset[index].clip(0,3)
 
-    print(Fore.GREEN + f"ER/PR/HER2 [SII] standardizzati (0-3)")
-
 
     """
         Vado a standardizzare ER[%], PR[%] e HER2 [%]
@@ -139,9 +145,6 @@ def clean_dataset(dataset):
             # Limito il valore tra 0-100
             dataset[index] = dataset[index].clip(0,100)
 
-    print(Fore.GREEN + f"ER/PR/HER2 [%] standardizzati (0-100)")
-
-
     """
         Vado a standardizzare GRADE
     """
@@ -155,8 +158,6 @@ def clean_dataset(dataset):
         # Limito il valore tra 1-3
         dataset['GRADE'] = dataset['GRADE'].clip(1,3)
     
-    print(Fore.GREEN + f"GRADE standardizzato (1-3 o NaN)")
-
 
     """
         Vado a standardizzare ki-67[%] da categorico/numerico
@@ -164,9 +165,7 @@ def clean_dataset(dataset):
     """
     if 'KI67 [%]' in dataset.columns:
         dataset['KI67 [%]'] = dataset['KI67 [%]'].apply(standardizzazione_ki67)
-    
-    print(Fore.GREEN + f"KI67 [%] standardizzato")
-    
+        
     
     """
         Vado a standardizzare isTN
@@ -181,8 +180,6 @@ def clean_dataset(dataset):
         # Converto il valore in binario
         dataset['isTN'] = (dataset['isTN'] == 1).astype(int)
     
-    print(Fore.GREEN + f"KisTN standardizzato (0 o 1)")
-
 
     """
         Validazione
@@ -198,53 +195,70 @@ def clean_dataset(dataset):
         tn_mask = dataset['isTN'] == 1
         dataset.loc[tn_mask, ['ER [%]', 'PR [%]']] = 0
 
-    print(Fore.GREEN + f"Valido")
-
 
     return dataset
 
 
+# **************************************
+#   Lettura di tutti i file
+# **************************************
+def process_all_file():
+    try:
+        for nome_file in FILENAME:
+            try:
+                # Percorso del file originale
+                RAW_PATH_DATASET = DATASET_PATH / nome_file
+                # File di output
+                OUTPUT_FILE  = PATH_CLEANED_DATASET / nome_file
 
-"""
+                print(Fore.BLUE + f"Sto pulendo: {nome_file}\n")
 
-    Ciclo sulla lista dei file
-
-"""
-
-try:
-    print(Fore.CYAN + "Pulizia dei 6 file csv")
-
-    for nome_file in FILENAME:
-        try:
-            # Percorso del file originale
-            RAW_PATH_DATASET = DATASET_PATH / nome_file
-            # File di output
-            OUTPUT_FILE  = PATH_CLEANED_DATASET / nome_file
-
-            print(Fore.BLUE + f"Sto pulendo: {nome_file}\n")
-
-            # Carico il file 
-            dataset = pd.read_csv(RAW_PATH_DATASET)
-            #Terminale:  mi salvo la lunghezza iniziale
-            start_len = len(dataset)
+                # Carico il file 
+                dataset = pd.read_csv(RAW_PATH_DATASET)
+                #Terminale:  mi salvo la lunghezza iniziale
+                start_len = len(dataset)
 
 
-            # Pulisco il dataset
-            dataset_cleaned = clean_dataset(dataset)
-            #Terminale: mi salvo la lunghezza del tataset pulito
-            end_len = len(dataset)
+                # Pulisco il dataset
+                dataset_cleaned = clean_dataset(dataset)
+                #Terminale: mi salvo la lunghezza del tataset pulito
+                end_len = len(dataset)
+
+                
+                # Validazione
+                checks = validation(dataset_cleaned, nome_file)
 
 
-            # Salvo il dataset nella cartella
-            dataset_cleaned.to_csv(OUTPUT_FILE, index=False)
+                # Salvo il dataset nella cartella
+                dataset_cleaned.to_csv(OUTPUT_FILE, index=False)
 
-            #Terminale: vedo se le lunghezze corrispondono e se non ho perso nulla
-            print(Fore.MAGENTA + f"\n{start_len} -> {end_len}")
-            print(Fore.YELLOW + f"{nome_file} pulizia completata")
-            print("****************************************************************************************")
+                #Terminale: vedo se le lunghezze corrispondono e se non ho perso nulla
+                print(Fore.MAGENTA + f"\n{start_len} -> {end_len}")
+                print(Fore.YELLOW + f"{nome_file} pulizia completata")
+                print(Fore.LIGHTGREEN_EX + f"{nome_file} completato ({checks}/6 check)\n")
+                print("****************************************************************************************")
 
-        except Exception as e:
-            print(Fore.RED + f"Errore in {nome_file}: {str(e)[:60]}\n")
+            except Exception as e:
+                print(Fore.RED + f"Errore in {nome_file}: {str(e)[:60]}\n")
+    except Exception as e:
+        print(Fore.RED + f"ERRORE generale: {e}")
 
-except Exception as e:
-    print(Fore.RED + f"ERRORE generale: {e}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    process_all_file()
