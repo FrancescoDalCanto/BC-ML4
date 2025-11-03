@@ -1,7 +1,6 @@
 import pandas as pd
 from pathlib import Path
 import numpy as np
-from scipy import stats
 
 from colorama import Fore, init
 # Resetto il colore dopo ogni print
