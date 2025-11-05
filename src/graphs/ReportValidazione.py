@@ -139,7 +139,7 @@ def ReportValidazione(info_list):
         
         bars = ax2.barh(dataframe['Dataset'], dataframe['Features'], color=colors, alpha=0.8)
         ax2.set_xlabel('Numero di Features', fontweight='bold', fontsize=12)
-        ax2.set_title('Complessità Dataset (Features)', 
+        ax2.set_title('Complessità Dataset (Features) (poche=buono, tante=non buono)', 
                       fontweight='bold', fontsize=14)
         ax2.grid(axis='x', alpha=0.3)
         
