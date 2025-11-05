@@ -55,23 +55,23 @@ def DataValidation(dataset, nome_file):
     # Step 3: Controlli di coerenza
     #=====================================
     try:
-        errori_coerenza = []
+        motivo_errori = []
         
         # Controlli specifici per colonne che EFFETTIVAMENTE esistono
         if 'tumor/benign' in dataset.columns:
             valori_validi = dataset['tumor/benign'].isin([0.0, 1.0])
             if not valori_validi.all():
-                errori_coerenza.append(f"tumor/benign: valori non validi")
+                motivo_errori.append(f"tumor/benign: valori non validi")
         
         if 'isTN' in dataset.columns:
             valori_validi = dataset['isTN'].isin([0, 1])
             if not valori_validi.all():
-                errori_coerenza.append(f"isTN: valori non validi")
+                motivo_errori.append(f"isTN: valori non validi")
         
         if 'Breast' in dataset.columns:
             valori_validi = dataset['Breast'].isin(['L', 'R'])
             if not valori_validi.all():
-                errori_coerenza.append(f"Breast: valori non validi (deve essere L o R)")
+                motivo_errori.append(f"Breast: valori non validi (deve essere L o R)")
         
         # Controllo offsets positivi
         offset_cols = ['z_offset', 'y_offset', 'x_offset']
@@ -79,13 +79,13 @@ def DataValidation(dataset, nome_file):
             if col in dataset.columns:
                 negativi = (dataset[col] < 0).sum()
                 if negativi > 0:
-                    errori_coerenza.append(f"{col}: {negativi} valori negativi")
+                    motivo_errori.append(f"{col}: {negativi} valori negativi")
         
-        if len(errori_coerenza) == 0:
+        if len(motivo_errori) == 0:
             print("Controllo coerenza: tutti i dati sono coerenti")
             check += 1
         else:
-            print(Fore.RED + f"Problemi di coerenza:\n{chr(10).join(errori_coerenza)}")
+            print(Fore.RED + f"Problemi di coerenza:\n{chr(10).join(motivo_errori)}")
     except Exception as e:
         print(Fore.RED + f"Errore nel controllo coerenza: {e}")
 
@@ -126,7 +126,10 @@ def DataValidation(dataset, nome_file):
         
         # Controllo Patient ID formato
         if 'Patient ID' in dataset.columns:
+            # Creo un regex, mi cerca tutti i pazienti del tipo AMBL-<numero>
             pattern = r'^AMBL-\d{3,}$'
+            # Tramite la tilde inverto i valori booleani
+            # In prativa vado a contare quanti patientID non corrispondono al regex richiesto
             invalidi = (~dataset['Patient ID'].astype(str).str.match(pattern)).sum()
             if invalidi > 0:
                 errori_formato.append(f"Patient ID: {invalidi} ID non nel formato AMBL-XXX")

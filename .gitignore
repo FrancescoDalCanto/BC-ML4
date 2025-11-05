@@ -19,5 +19,8 @@ __pycache__/
 dataset/
 
 
+# Report - non caricare su GitHub
+report/
+
 # Diario - non caricare su GitHub
 Diario/
