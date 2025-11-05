@@ -19,8 +19,5 @@ __pycache__/
 dataset/
 
 
-# Grafici - non caricare su GitHub
-Graphs/
-
 # Diario - non caricare su GitHub
 Diario/

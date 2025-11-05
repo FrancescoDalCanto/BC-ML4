@@ -1,10 +1,19 @@
 import pandas as pd
-from pathlib import Path
 import numpy as np
+import sys
+from pathlib import Path
 
 from colorama import Fore, init
 # Resetto il colore dopo ogni print
 init(autoreset=True)
+
+
+
+# Aggiungo la cartella 'src' al path di Python
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from data_validation.DataValidation import DataValidation
+
 
 # Percorso della CARTELLA dataset
 DATASET_PATH = Path('/Users/francesco/Tesi/BC-ML4/dataset')
@@ -228,6 +237,11 @@ def process_all_file():
                 dataset_cleaned = clean_dataset(dataset)
                 # Mi salvo la lunghezza dopo la pulizia
                 end_len = len(dataset_cleaned)
+                
+
+                # Verifico il DataSet pulito
+                checks = DataValidation(dataset_cleaned, nome_file)
+
 
                 # Salvo il dataset pulito nel CSV di output
                 # index=False = non salva l'indice delle righe
@@ -236,6 +250,7 @@ def process_all_file():
                 print(Fore.MAGENTA + f"\nRiepilogo:")
                 print(Fore.MAGENTA + f"  Righe: {start_len} → {end_len}")
                 print(Fore.MAGENTA + f"  Colonne: {len(dataset.columns)} → {len(dataset_cleaned.columns)}")
+                print(Fore.LIGHTYELLOW_EX + f"  Numero di controlli superati con DataValidation: {checks} → /5")
                 print(Fore.GREEN + f"{nome_file} pulizia completata")
 
             except Exception as e:
