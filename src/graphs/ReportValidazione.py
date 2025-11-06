@@ -1,24 +1,25 @@
-"""
-    Questo metodo mi genera un singolo report grafico per capire come sono i miei dati
-    e se posso fare il classificatore
-"""
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from colorama import Fore, init
+import numpy as np
 
 # Resetto il colore dopo ogni print
 init(autoreset=True)
 
-# Percorso da cui prendere i CSV
-DATASET_PATH = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned')
+# ====================
+# CONFIGURAZIONE PATHS
+# ====================
 
-# Percorso per salvare il report
-OUTPUT_REPORT_PATH = Path('/Users/francesco/Tesi/BC-ML4/report/report_statistico/dataset_validation_report.png')
+BEFORE_PATH = Path('/Users/francesco/Tesi/BC-ML4/dataset/original')
 
-# Nomi dei CSV su cui fare il grafico
-FILENAME = [
+AFTER_PATH = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned')
+
+OUTPUT_DIR = Path('/Users/francesco/Tesi/BC-ML4/report/before_vs_after_cleaning')
+
+# DATASET_FILES contiene i nomi dei 6 file CSV che vogliamo analizzare
+DATASET_FILES = [
     'medsam_dynamic.csv',
     'original_dynamic.csv',
     'preprocessed_dynamic.csv',
@@ -27,218 +28,373 @@ FILENAME = [
     't2_preprocessed_masks.csv'
 ]
 
-# Lista globale per raccogliere TUTTI i dati
-all_datasets_info = []
 
 
-# *******************
-# Analisi del dataset
-# *******************
-def DatasetAnalyses(dataset, nome_file):
+# ====================
+# FUNZIONI DI ANALISI
+# ====================
+
+
+def analyze_dataset(dataset, nome_file):
+    """
+        Questa funzione analizza un singolo dataset ed estraggo informazioni chiave.
+        Conto le classi (benigne vs maligne), i missing values, e il numero di features reali
+        escludendo i metadati che non sono predittive.
+    """
     try:
-        # Estraggo informazioni sul target
+        # Estraggo la colonna target dal dataset
         target = dataset['tumor/benign']
-
-        # Conto il numero di classi
+        
+        # Conto quanti campioni appartengono a ciascuna classe
         numero_benigne = (target == 0.0).sum()
         numero_maligne = (target == 1.0).sum()
-        numero_mancanti = target.isna().sum()
-
-        # Escludo le colonne dei metadati
+        numero_mancanti = target.isna().sum()  # Valori mancanti nel target
+        
+        # Definisco le colonne che sono metadati e non features predittive
+        # Escludo queste dal conteggio delle features perché descrivono il campione
         metadata_colonne = ['Patient ID', 'lesion idx', 'tumor/benign', 'isTN', 
-                         'Breast', 'z_offset', 'y_offset', 'x_offset', 
-                         'Pixel Spacing', 'Slice Thickness']
-        numero_features = len(dataset.columns) - len(metadata_colonne)
-
-        # Preparo le informazioni da restituire
+                          'Breast', 'z_offset', 'y_offset', 'x_offset', 
+                          'Pixel Spacing', 'Slice Thickness', 'Unnamed: 0',
+                          'GRADE', 'ER [%]', 'PR [%]', 'HER2 [%]']
+        
+        # Creo una lista di feature eliminando i metadati dal totale delle colonne
+        feature_columns = [col for col in dataset.columns if col not in metadata_colonne]
+        numero_features = len(feature_columns)
+        
+        # Calcolo il totale dei missing values in tutto il dataset
+        total_missing = dataset.isna().sum().sum()
+        # Converto il conteggio assoluto in percentuale rispetto al totale delle celle
+        missing_percentage = (total_missing / (dataset.shape[0] * dataset.shape[1])) * 100
+        
+        # Creo un dizionario con tutte le informazioni estratte
         info = {
             'Dataset': nome_file.replace('.csv', ''),
             'Righe': len(dataset),
+            'Colonne_Totali': len(dataset.columns),
             'Features': numero_features,
             'Benign': numero_benigne,
             'Tumor': numero_maligne,
-            'Missing': numero_mancanti,
-            'Bilanciamento': 'Buono' if numero_benigne == numero_maligne else 'Sbilanciato'
+            'Missing_Target': numero_mancanti,
+            'Missing_Total': total_missing,
+            'Missing_Percentage': missing_percentage,
+            # Determino se il dataset è bilanciato confrontando il numero di campioni per classe
+            'Bilanciamento': 'Bilanciato' if numero_benigne == numero_maligne else 'Sbilanciato'
         }
-
+        
         return info
     
     except Exception as e:
-        print(Fore.RED + f"Errore nell'analisi: {str(e)}")
+        print(Fore.RED + f"Errore nell'analisi di {nome_file}: {str(e)}")
         return None
 
 
-# ****************************
-# Creazione del report grafico
-# ****************************
-def ReportValidazione(info_list):
-    try:
-        # Converto LISTA di dizionari in DataFrame
-        dataframe = pd.DataFrame(info_list)
 
-        # Configuro lo stile
-        sns.set_style("whitegrid")
-
-        # Crea una figura con solo 3 plot 
-        fig = plt.figure(figsize=(16, 10))
-        
-        # Definisci layout: 2 righe, 2 colonne
-        # Prima riga: 2 subplot
-        # Seconda riga: 1 subplot centrato che occupa entrambe le colonne
-        gs = fig.add_gridspec(2, 2, hspace=0.3, wspace=0.3)
-        
-        fig.suptitle('Dataset Validation Report - Fattibilità Classificatore', 
-                     fontsize=20, fontweight='bold', y=0.98)
-
-        # ==================================
-        # PLOT 1: Bilanciamento delle classi (top-left)
-        # ==================================
-        ax1 = fig.add_subplot(gs[0, 0])
-        x = range(len(dataframe))
-        width = 0.35
-
-        ax1.bar([i - width/2 for i in x], dataframe['Benign'], width, 
-                label='Benign', color='#3498db', alpha=0.8)
-        ax1.bar([i + width/2 for i in x], dataframe['Tumor'], width, 
-                label='Tumor', color='#e74c3c', alpha=0.8)
-
-        ax1.set_xlabel('Dataset', fontweight='bold', fontsize=12)
-        ax1.set_ylabel('Numero Campioni', fontweight='bold', fontsize=12)
-
-        # Aggiusto il titolo
-        ax1.set_title('Distribuzione Classi (Tumor vs Benign)', 
-                    fontweight='bold', fontsize=14, pad=35)
-
-        ax1.set_xticks(x)
-        ax1.set_xticklabels(dataframe['Dataset'], rotation=45, ha='right', fontsize=10)
-
-        ax1.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), 
-                ncol=2, frameon=False, fontsize=10)
-
-        ax1.grid(axis='y', alpha=0.3)
-
-        # Imposta limite superiore Y per dare più spazio
-        max_value = max(dataframe['Benign'].max(), dataframe['Tumor'].max())
-        ax1.set_ylim(0, max_value + 15)
-
-        # Aggiungo le scritte
-        for i, row in dataframe.iterrows():
-            if row['Benign'] == row['Tumor']:
-                ax1.text(i, max(row['Benign'], row['Tumor']) + 5, 
-                        '✓ Bilanciato', ha='center', fontsize=8, 
-                        color='green', fontweight='bold')
-
-
-
-        # ============================================
-        # PLOT 2: Numero features per dataset
-        # ============================================
-        ax2 = fig.add_subplot(gs[0, 1])
-        colors = ['#2ecc71' if 'dynamic' in name else '#9b59b6' 
-                  for name in dataframe['Dataset']]
-        
-        bars = ax2.barh(dataframe['Dataset'], dataframe['Features'], color=colors, alpha=0.8)
-        ax2.set_xlabel('Numero di Features', fontweight='bold', fontsize=12)
-        ax2.set_title('Complessità Dataset (Features) (poche=buono, tante=non buono)', 
-                      fontweight='bold', fontsize=14)
-        ax2.grid(axis='x', alpha=0.3)
-        
-        # Aggiungi valori sulle barre
-        for bar, val in zip(bars, dataframe['Features']):
-            ax2.text(val + 2, bar.get_y() + bar.get_height()/2, 
-                    f'{val}', va='center', fontsize=10, fontweight='bold')
-
-        # ============================================
-        # PLOT 3: Tabella riepilogativa
-        # ============================================
-        ax3 = fig.add_subplot(gs[1, :])
-        ax3.axis('tight')
-        ax3.axis('off')
-        
-        table_data = dataframe[['Dataset', 'Righe', 'Features', 'Benign', 'Tumor', 'Missing']].values
-        table = ax3.table(cellText=table_data, 
-                         colLabels=['Dataset', 'Righe', 'Features', 'Benign', 'Tumor', 'Missing'],
-                         cellLoc='center', loc='center',
-                         colColours=['#ecf0f1']*6)
-        
-        table.auto_set_font_size(False)
-        table.set_fontsize(10)
-        table.scale(1, 2.5)
-        
-        # Colora le righe alternate
-        for i in range(1, len(table_data) + 1):
-            for j in range(6):
-                cell = table[(i, j)]
-                if i % 2 == 0:
-                    cell.set_facecolor('#f8f9fa')
-                else:
-                    cell.set_facecolor('#ffffff')
-        
-        ax3.set_title('Riepilogo Dettagliato', fontweight='bold', fontsize=14, pad=15)
-
-
-        # ============================================
-        # Salva il grafico
-        # ============================================
-        plt.tight_layout()
-        plt.savefig(OUTPUT_REPORT_PATH, dpi=300, bbox_inches='tight', 
-                   facecolor='white', edgecolor='none')
-        print(Fore.GREEN + f"\nReport grafico salvato: {OUTPUT_REPORT_PATH}")
-        print(Fore.GREEN + f"Risoluzione: 300 DPI | Formato: PNG")
-        plt.close()
-
-    except Exception as e:
-        print(Fore.RED + f"Errore nella generazione del report: {str(e)}")
-        import traceback
-        print(Fore.RED + traceback.format_exc())
-
-
-# *************************
-#   Lettura di tutti i file
-# *************************
-def process_all_file():
-    global all_datasets_info
+def load_datasets(file_list, before_path, after_path):
+    before_info = []
+    after_info = []
     
-    try:
-        print(Fore.YELLOW + "\n" + "="*60)
-        print(Fore.YELLOW + "  ANALISI DATASET PER CLASSIFICATORE")
-        print(Fore.YELLOW + "="*60)
-        
-        # Loop per raccogliere TUTTI i dati
-        for nome_file in FILENAME:
-            try:
-                PATH_TO_READ = DATASET_PATH / nome_file
-                dataset = pd.read_csv(PATH_TO_READ)
+    print(Fore.YELLOW + "\n" + "="*70)
+    print(Fore.YELLOW + "  CARICAMENTO E ANALISI DATASET")
+    print(Fore.YELLOW + "="*70 + "\n")
+    
+    for nome_file in file_list:
+        try:
+            # Leggo il file originale 
+            before_file = before_path / nome_file
+            if before_file.exists():
+                df_before = pd.read_csv(before_file)
+                info_before = analyze_dataset(df_before, nome_file)
+                if info_before:
+                    before_info.append(info_before)
+                    print(Fore.CYAN + f"BEFORE: {nome_file} - {df_before.shape}")
+            else:
+                print(Fore.RED + f"File BEFORE non trovato: {before_file}")
+            
+            # Leggo il file pulito
+            after_file = after_path / nome_file
+            if after_file.exists():
+                df_after = pd.read_csv(after_file)
+                info_after = analyze_dataset(df_after, nome_file)
+                if info_after:
+                    after_info.append(info_after)
+                    print(Fore.GREEN + f"AFTER:  {nome_file} - {df_after.shape}")
+            else:
+                print(Fore.RED + f"File AFTER non trovato: {after_file}")
                 
-                # Analizza dataset
-                info = DatasetAnalyses(dataset, nome_file)
-                
-                if info:
-                    all_datasets_info.append(info)
-                    print(Fore.CYAN + f"{nome_file} analizzato")
-                    
-            except FileNotFoundError:
-                print(Fore.RED + f"File non trovato: {nome_file}")
-            except Exception as e:
-                print(Fore.RED + f"Errore in {nome_file}: {str(e)}")
-        
-        # Genera report UNA SOLA VOLTA con TUTTI i dati
-        if all_datasets_info:
-            print(Fore.YELLOW + "\n" + "="*60)
-            print(Fore.YELLOW + "  GENERAZIONE REPORT GRAFICO")
-            print(Fore.YELLOW + "="*60)
-            ReportValidazione(all_datasets_info)
-        else:
-            print(Fore.RED + "\nNessun dataset analizzato con successo")
+            print()
+            
+        except FileNotFoundError:
+            print(Fore.RED + f"File non trovato: {nome_file}\n")
+        except Exception as e:
+            print(Fore.RED + f"Errore in {nome_file}: {str(e)}\n")
+    
+    return before_info, after_info
 
+
+
+# ================================
+# FUNZIONI PER GRAFICI INDIVIDUALI
+# ================================
+def plot_2_numero_features(df_before, df_after, output_dir):
+    """
+        Grafico 2: Confronto numero di features
+        
+        Visualizzo quante feature predittive rimangono dopo la pulizia.
+    """
+    plt.figure(figsize=(12, 7))
+    
+    x = np.arange(len(df_before))
+    width = 0.35
+    
+    bars1 = plt.bar(x - width/2, df_before['Features'], width, 
+                   label='BEFORE', color='#e67e22', alpha=0.8)
+    bars2 = plt.bar(x + width/2, df_after['Features'], width, 
+                   label='AFTER', color='#3498db', alpha=0.8)
+    
+    plt.xlabel('Dataset', fontweight='bold', fontsize=12)
+    plt.ylabel('Numero di Features', fontweight='bold', fontsize=12)
+    plt.title('Confronto: Complessità Dataset (Features)', 
+             fontweight='bold', fontsize=15, pad=20)
+    plt.xticks(x, df_after['Dataset'], rotation=45, ha='right', fontsize=10)
+    plt.legend(loc='upper right', frameon=True, fontsize=11)
+    plt.grid(axis='y', alpha=0.3)
+    
+    for bar in bars1:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2., height,
+                f'{int(height)}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    for bar in bars2:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2., height,
+                f'{int(height)}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    
+    plt.tight_layout()
+    output_path = output_dir / 'grafico_2_numero_features.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    plt.close()
+    print(Fore.GREEN + f"Salvato: {output_path.name}")
+
+
+
+def plot_3_bilanciamento_before(df_before, output_dir):
+    """
+        Grafico 3: Bilanciamento classi BEFORE
+        
+        Creo un istogramma che mostra la distribuzione delle due classi
+        (benign vs tumor) nei dataset originali. 
+    """
+    plt.figure(figsize=(12, 7))
+    
+    x = np.arange(len(df_before))
+    width = 0.35
+    
+    bars1 = plt.bar(x - width/2, df_before['Benign'], width, 
+                   label='Benign', color='#3498db', alpha=0.8)
+    bars2 = plt.bar(x + width/2, df_before['Tumor'], width, 
+                   label='Tumor', color='#e74c3c', alpha=0.8)
+    
+    plt.xlabel('Dataset', fontweight='bold', fontsize=12)
+    plt.ylabel('Numero Campioni', fontweight='bold', fontsize=12)
+    plt.title('BEFORE Cleaning: Distribuzione Classi (Tumor vs Benign)', 
+             fontweight='bold', fontsize=15, pad=20)
+    plt.xticks(x, df_before['Dataset'], rotation=45, ha='right', fontsize=10)
+    plt.legend(loc='upper right', frameon=True, fontsize=11)
+    plt.grid(axis='y', alpha=0.3)
+    
+    # Aggiungo un'etichetta "Bilanciato" se le due classi hanno lo stesso numero di campioni
+    for i, row in df_before.iterrows():
+        if row['Benign'] == row['Tumor']:
+            plt.text(i, max(row['Benign'], row['Tumor']) + 5, 
+                    'Bilanciato', ha='center', fontsize=10, 
+                    color='green', fontweight='bold')
+    
+    plt.tight_layout()
+    output_path = output_dir / 'grafico_3_bilanciamento_classi_before.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    plt.close()
+    print(Fore.GREEN + f"Salvato: {output_path.name}")
+
+
+
+def plot_4_bilanciamento_after(df_after, output_dir):
+    """
+        Grafico 4: Bilanciamento classi AFTER
+        
+        Creo lo stesso tipo di grafico di plot_3, ma per i dataset puliti.
+        Questo mi permette di verificare se il processo di cleaning ha migliorato
+        il bilanciamento delle classi.
+    """
+    plt.figure(figsize=(12, 7))
+    
+    x = np.arange(len(df_after))
+    width = 0.35
+    
+    bars1 = plt.bar(x - width/2, df_after['Benign'], width, 
+                   label='Benign', color='#3498db', alpha=0.8)
+    bars2 = plt.bar(x + width/2, df_after['Tumor'], width, 
+                   label='Tumor', color='#e74c3c', alpha=0.8)
+    
+    plt.xlabel('Dataset', fontweight='bold', fontsize=12)
+    plt.ylabel('Numero Campioni', fontweight='bold', fontsize=12)
+    plt.title('AFTER Cleaning: Distribuzione Classi (Tumor vs Benign)', 
+             fontweight='bold', fontsize=15, pad=20)
+    plt.xticks(x, df_after['Dataset'], rotation=45, ha='right', fontsize=10)
+    plt.legend(loc='upper right', frameon=True, fontsize=11)
+    plt.grid(axis='y', alpha=0.3)
+    
+    for i, row in df_after.iterrows():
+        if row['Benign'] == row['Tumor']:
+            plt.text(i, max(row['Benign'], row['Tumor']) + 5, 
+                    'Bilanciato', ha='center', fontsize=10, 
+                    color='green', fontweight='bold')
+    
+    plt.tight_layout()
+    output_path = output_dir / 'grafico_4_bilanciamento_classi_after.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    plt.close()
+    print(Fore.GREEN + f"Salvato: {output_path.name}")
+
+
+
+def plot_5_missing_values(df_before, df_after, output_dir):
+    """
+        Grafico 5: Missing valori BEFORE vs AFTER
+        
+        Creo un grafico che confronta la percentuale di missing values
+        prima e dopo la pulizia. Questa è una delle metriche più importanti
+        poiché il cleaning dovrebbe ridurre significativamente i dati mancanti.
+    """
+    plt.figure(figsize=(12, 7))
+    
+    x = np.arange(len(df_before))
+    width = 0.35
+    
+    bars1 = plt.bar(x - width/2, df_before['Missing_Percentage'], width, 
+                   label='BEFORE', color='#e74c3c', alpha=0.8)
+    bars2 = plt.bar(x + width/2, df_after['Missing_Percentage'], width, 
+                   label='AFTER', color='#2ecc71', alpha=0.8)
+    
+    plt.xlabel('Dataset', fontweight='bold', fontsize=12)
+    plt.ylabel('Missing Values (%)', fontweight='bold', fontsize=12)
+    plt.title('Confronto: Percentuale Missing Values', 
+             fontweight='bold', fontsize=15, pad=20)
+    plt.xticks(x, df_before['Dataset'], rotation=45, ha='right', fontsize=10)
+    plt.legend(loc='upper right', frameon=True, fontsize=11)
+    plt.grid(axis='y', alpha=0.3)
+    
+    for bar in bars1:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2., height,
+                f'{height:.1f}%', ha='center', va='bottom', fontsize=8, fontweight='bold')
+    for bar in bars2:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2., height,
+                f'{height:.1f}%', ha='center', va='bottom', fontsize=8, fontweight='bold')
+    
+    plt.tight_layout()
+    output_path = output_dir / 'grafico_5_missing_values.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    plt.close()
+    print(Fore.GREEN + f"Salvato: {output_path.name}")
+
+
+# ============================================
+# FUNZIONE PRINCIPALE: GENERA TUTTI I GRAFICI
+# ============================================
+
+
+def generate_all_plots(before_info, after_info, output_dir):
+    """
+        Chiamo sequenzialmente tutte le 6 funzioni di plotting.
+        Converto prima i dati in DataFrame per facilitare l'accesso ai dati,
+        poi configuro lo stile generale di seaborn e matplotlib.
+        Infine genero i grafici e stampo un sommario dei cambiamenti.
+    """
+    try:
+        # Converto le liste di dizionari in DataFrame pandas per un accesso più semplice
+        df_before = pd.DataFrame(before_info)
+        df_after = pd.DataFrame(after_info)
+        
+        # Configuro lo stile visuale globale per tutti i grafici
+        sns.set_style("whitegrid")
+        plt.rcParams['font.size'] = 10
+
+        
+        print(Fore.YELLOW + "\n" + "="*70)
+        print(Fore.YELLOW + "  GENERAZIONE GRAFICI PNG SEPARATI")
+        print(Fore.YELLOW + "="*70 + "\n")
+        
+        # Chiamo tutte e 6 le funzioni di plotting nell'ordine stabilito
+        plot_2_numero_features(df_before, df_after, output_dir)
+        plot_3_bilanciamento_before(df_before, output_dir)
+        plot_4_bilanciamento_after(df_after, output_dir)
+        plot_5_missing_values(df_before, df_after, output_dir)
+        
+        print(Fore.GREEN + "\n" + "="*70)
+        print(Fore.GREEN + "  TUTTI I GRAFICI GENERATI CON SUCCESSO!")
+        print(Fore.GREEN + "="*70)
+        print(Fore.CYAN + f"\nCartella output: {output_dir}")
+        print(Fore.CYAN + f"Grafici generati: 6 PNG separati")
+        print(Fore.CYAN + f"Risoluzione: 300 DPI per ogni grafico")
+        
+        # Stampo un sommario dettagliato dei cambiamenti tra BEFORE e AFTER
+        print(Fore.YELLOW + "\n" + "="*70)
+        print(Fore.YELLOW + "  SOMMARIO DEI CAMBIAMENTI")
+        print(Fore.YELLOW + "="*70)
+        
+        # Itero su ogni dataset e mostro le differenze tra BEFORE e AFTER
+        for i in range(len(df_before)):
+            before = df_before.iloc[i]
+            after = df_after.iloc[i]
+            print(Fore.WHITE + f"\n{before['Dataset']}:")
+            # Uso la notazione +/- per mostrare se il valore è aumentato o diminuito
+            print(Fore.CYAN + f"  Righe:      {before['Righe']} → {after['Righe']} "
+                  f"({after['Righe'] - before['Righe']:+d})")
+            print(Fore.CYAN + f"  Features:   {before['Features']} → {after['Features']} "
+                  f"({after['Features'] - before['Features']:+d})")
+            print(Fore.CYAN + f"  Missing:    {before['Missing_Percentage']:.2f}% → {after['Missing_Percentage']:.2f}% "
+                  f"({after['Missing_Percentage'] - before['Missing_Percentage']:+.2f}%)")
+        
     except Exception as e:
-        print(Fore.RED + f"\n ERRORE generale: {e}")
+        print(Fore.RED + f"\nErrore nella generazione dei grafici: {str(e)}")
         import traceback
         print(Fore.RED + traceback.format_exc())
 
 
-# ****************************************************
-#   Avvio del programma per la generazione del grafico
-# ****************************************************
+
+# =============================
+# MAIN: ESECUZIONE DELLO SCRIPT
+# =============================
+
+
+def main():
+    try:
+        print(Fore.YELLOW + "\n" + "="*70)
+        print(Fore.YELLOW + "  CONFRONTO BEFORE vs AFTER DATA CLEANING")
+        print(Fore.YELLOW + "  (Generazione 6 grafici PNG separati)")
+        print(Fore.YELLOW + "="*70)
+        
+        # Carico tutti i dataset e ne estraggo le statistiche
+        before_info, after_info = load_datasets(DATASET_FILES, BEFORE_PATH, AFTER_PATH)
+        
+        # Verifico che il caricamento sia stato completato con successo
+        if not before_info or not after_info:
+            print(Fore.RED + "\nErrore: Nessun dataset analizzato con successo!")
+            return
+        
+        if len(before_info) != len(after_info):
+            print(Fore.YELLOW + f"\nWarning: Numero diverso di file BEFORE ({len(before_info)}) "
+                  f"e AFTER ({len(after_info)})")
+        
+        # Genero tutti i grafici
+        generate_all_plots(before_info, after_info, OUTPUT_DIR)
+        
+    except Exception as e:
+        print(Fore.RED + f"\nERRORE GENERALE: {e}")
+        import traceback
+        print(Fore.RED + traceback.format_exc())
+
+
+
 if __name__ == "__main__":
-    process_all_file()
+    main()

@@ -50,13 +50,9 @@ colonne_da_rimuovere = [
     'TemporalResolution 5',
     'ER [%]',       
     'PR [%]',       
-    'HER2 [%]',     
-    'ER [SII]',     
-    'PR [SII]',     
-    'HER2 [SII]',  
+    'HER2 [%]',       
     'GRADE',        
-    'KI67 [%]'  
-]
+    ]
 
 
 # **************************************
@@ -194,6 +190,19 @@ def clean_dataset(dataset):
         dataset['KI67 [%]'] = dataset['KI67 [%]'].apply(standardizzazione_ki67)
 
     """
+        Vado a standardizzare i marcatori biologici
+    """
+    if 'ER [SII]' in dataset.columns:
+        dataset['ER [SII]'] = dataset['ER [SII]'].apply(standardizzazione_IHC)
+
+    if 'PR [SII]' in dataset.columns:
+        dataset['PR [SII]'] = dataset['PR [SII]'].apply(standardizzazione_IHC)
+
+    if 'HER2 [SII]' in dataset.columns:
+        dataset['HER2 [SII]'] = dataset['HER2 [SII]'].apply(standardizzazione_IHC)
+
+
+    """
     Vago a standardizzare isTN (isTripleNegative)
     """
     if 'isTN' in dataset.columns:
@@ -220,7 +229,7 @@ def process_all_file():
         for nome_file in FILENAME:
             try:
                 # Percorso del file originale
-                RAW_PATH_DATASET = DATASET_PATH / nome_file
+                RAW_PATH_DATASET = DATASET_PATH / "original" / nome_file
                 # File di output
                 OUTPUT_FILE = PATH_CLEANED_DATASET / nome_file
 
@@ -250,7 +259,7 @@ def process_all_file():
                 print(Fore.MAGENTA + f"\nRiepilogo:")
                 print(Fore.MAGENTA + f"  Righe: {start_len} → {end_len}")
                 print(Fore.MAGENTA + f"  Colonne: {len(dataset.columns)} → {len(dataset_cleaned.columns)}")
-                print(Fore.LIGHTYELLOW_EX + f"  Numero di controlli superati con DataValidation: {checks} → /5")
+                print(Fore.LIGHTYELLOW_EX + f"  Numero di controlli superati con DataValidation: {checks} /5")
                 print(Fore.GREEN + f"{nome_file} pulizia completata")
 
             except Exception as e:

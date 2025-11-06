@@ -1,18 +1,3 @@
-
-"""
-    Questa funzione mi va a valutare i dati, ovvero
-    mi valuta se i dati siano puliti, accurati e 
-    pronti per essere utilizzati;
-
-    Mi deve valutare:
-        1. Controllo del tipo di dati
-        2. Controlli di completezza
-        3. Controlli di coerenza
-        4. Controlli di unicità
-        5. Controlli di formato
-"""
-
-
 import pandas as pd
 
 from colorama import Fore, init
@@ -45,7 +30,7 @@ def DataValidation(dataset, nome_file):
             check += 1
         else:
             print(f"Valori mancanti trovati:\n{dati_mancanti[dati_mancanti > 0]}")
-            dataset = dataset.dropna()
+            # TODO: Se ci fossero dei missing li gestisco dopo
     except Exception as e:
         print(Fore.RED + f"Errore nel controllo completezza: {e}")
 
@@ -81,6 +66,28 @@ def DataValidation(dataset, nome_file):
                 if negativi > 0:
                     motivo_errori.append(f"{col}: {negativi} valori negativi")
         
+        # Controllo i biomarcatori
+        biomarcatori_ihc = ['ER [SII]', 'PR [SII]', 'HER2 [SII]']
+        for bio in biomarcatori_ihc:
+            if bio in dataset.columns:
+                valori_validi = dataset[bio].isin([0, 1, 2, 3])
+                if not valori_validi.all():
+                    motivo_errori.append(f"{bio}: valori non validi (deve essere 0, 1, 2 o 3)")
+        
+        # Controllo KI-67 (0-100)
+        if 'KI67 [%]' in dataset.columns:
+            invalidi = ((dataset['KI67 [%]'] < 0) | (dataset['KI67 [%]'] > 100)).sum()
+            if invalidi > 0:
+                motivo_errori.append(f"KI67 [%]: {invalidi} valori fuori range [0-100]")
+        
+        # Controllo offsets positivi
+        offset_cols = ['z_offset', 'y_offset', 'x_offset']
+        for col in offset_cols:
+            if col in dataset.columns:
+                negativi = (dataset[col] < 0).sum()
+                if negativi > 0:
+                    motivo_errori.append(f"{col}: {negativi} valori negativi")
+
         if len(motivo_errori) == 0:
             print("Controllo coerenza: tutti i dati sono coerenti")
             check += 1
