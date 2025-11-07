@@ -1,12 +1,16 @@
 import pandas as pd
 
+
+
 from colorama import Fore, init
 # Resetto il colore dopo ogni print
 init(autoreset=True)
 
-def DataValidation(dataset, nome_file):
 
+
+def DataValidation(dataset, nome_file):
     check = 0
+
 
     #=====================================
     # Step 1: Controllo del tipo di dati
@@ -30,9 +34,10 @@ def DataValidation(dataset, nome_file):
             check += 1
         else:
             print(f"Valori mancanti trovati:\n{dati_mancanti[dati_mancanti > 0]}")
-            # TODO: Se ci fossero dei missing li gestisco dopo
     except Exception as e:
         print(Fore.RED + f"Errore nel controllo completezza: {e}")
+
+
 
 
 
@@ -66,27 +71,39 @@ def DataValidation(dataset, nome_file):
                 if negativi > 0:
                     motivo_errori.append(f"{col}: {negativi} valori negativi")
         
-        # Controllo i biomarcatori
+        # MODIFICATO: Controllo i biomarcatori IHC
+        # Ora accetto anche i valori intermedi (1.5, 2.5) generati dalla standardizzazione
         biomarcatori_ihc = ['ER [SII]', 'PR [SII]', 'HER2 [SII]']
         for bio in biomarcatori_ihc:
             if bio in dataset.columns:
-                valori_validi = dataset[bio].isin([0, 1, 2, 3])
+                # Ignoro i NaN per questo controllo
+                valori_non_nan = dataset[bio].dropna()
+                if len(valori_non_nan) > 0:
+                    # Accetto valori interi (0, 1, 2, 3) e intermedi (1.5, 2.5)
+                    valori_validi = valori_non_nan.isin([0, 1, 1.5, 2, 2.5, 3])
+                    if not valori_validi.all():
+                        invalidi = (~valori_validi).sum()
+                        motivo_errori.append(f"{bio}: {invalidi} valori non validi (attesi: 0, 1, 1.5, 2, 2.5, 3)")
+        
+        # Controllo GRADE (accetta anche 1.5, 2.5)
+        if 'GRADE' in dataset.columns:
+            valori_non_nan = dataset['GRADE'].dropna()
+            if len(valori_non_nan) > 0:
+                # Accetto valori tra 1 e 3, inclusi intermedi (1.5, 2.5)
+                valori_validi = (valori_non_nan >= 1) & (valori_non_nan <= 3)
                 if not valori_validi.all():
-                    motivo_errori.append(f"{bio}: valori non validi (deve essere 0, 1, 2 o 3)")
+                    invalidi = (~valori_validi).sum()
+                    motivo_errori.append(f"GRADE: {invalidi} valori fuori range [1-3]")
         
         # Controllo KI-67 (0-100)
         if 'KI67 [%]' in dataset.columns:
-            invalidi = ((dataset['KI67 [%]'] < 0) | (dataset['KI67 [%]'] > 100)).sum()
-            if invalidi > 0:
-                motivo_errori.append(f"KI67 [%]: {invalidi} valori fuori range [0-100]")
-        
-        # Controllo offsets positivi
-        offset_cols = ['z_offset', 'y_offset', 'x_offset']
-        for col in offset_cols:
-            if col in dataset.columns:
-                negativi = (dataset[col] < 0).sum()
-                if negativi > 0:
-                    motivo_errori.append(f"{col}: {negativi} valori negativi")
+            valori_non_nan = dataset['KI67 [%]'].dropna()
+            if len(valori_non_nan) > 0:
+                invalidi = ((valori_non_nan < 0) | (valori_non_nan > 100)).sum()
+                if invalidi > 0:
+                    motivo_errori.append(f"KI67 [%]: {invalidi} valori fuori range [0-100]")
+
+
 
         if len(motivo_errori) == 0:
             print("Controllo coerenza: tutti i dati sono coerenti")
@@ -95,6 +112,8 @@ def DataValidation(dataset, nome_file):
             print(Fore.RED + f"Problemi di coerenza:\n{chr(10).join(motivo_errori)}")
     except Exception as e:
         print(Fore.RED + f"Errore nel controllo coerenza: {e}")
+
+
 
 
     #=====================================
@@ -111,6 +130,8 @@ def DataValidation(dataset, nome_file):
             dataset = dataset.drop_duplicates()
     except Exception as e:
         print(Fore.RED + f"Errore nel controllo unicità: {e}")
+
+
 
 
 
@@ -136,7 +157,7 @@ def DataValidation(dataset, nome_file):
             # Creo un regex, mi cerca tutti i pazienti del tipo AMBL-<numero>
             pattern = r'^AMBL-\d{3,}$'
             # Tramite la tilde inverto i valori booleani
-            # In prativa vado a contare quanti patientID non corrispondono al regex richiesto
+            # In pratica vado a contare quanti patientID non corrispondono al regex richiesto
             invalidi = (~dataset['Patient ID'].astype(str).str.match(pattern)).sum()
             if invalidi > 0:
                 errori_formato.append(f"Patient ID: {invalidi} ID non nel formato AMBL-XXX")
@@ -148,5 +169,7 @@ def DataValidation(dataset, nome_file):
             print(Fore.RED + f"Problemi di formato:\n{chr(10).join(errori_formato)}")
     except Exception as e:
         print(Fore.RED + f"Errore nel controllo formato: {e}")
+
+
 
     return check

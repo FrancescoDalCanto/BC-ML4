@@ -1,3 +1,14 @@
+"""
+    Questo script mi genera un singolo grafico per ogni biomarcatore
+    solo per i dati AFTER pulizia
+        - GRADE
+        - ER
+        - PR
+        - HER2
+        - isTN
+        - ki-67
+"""
+
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -5,20 +16,11 @@ import seaborn as sns
 from colorama import Fore, init
 import numpy as np
 
-# Resetto il colore dopo ogni print
 init(autoreset=True)
 
-# ====================
-# CONFIGURAZIONE PATHS
-# ====================
+CLEANED_PATH = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned')
+OUTPUT_PATH = Path('/Users/francesco/Tesi/BC-ML4/report/report_biomarcatori')
 
-BEFORE_PATH = Path('/Users/francesco/Tesi/BC-ML4/dataset/original')
-
-AFTER_PATH = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned')
-
-OUTPUT_DIR = Path('/Users/francesco/Tesi/BC-ML4/report/before_vs_after_cleaning')
-
-# DATASET_FILES contiene i nomi dei 6 file CSV che vogliamo analizzare
 DATASET_FILES = [
     'medsam_dynamic.csv',
     'original_dynamic.csv',
@@ -28,372 +30,381 @@ DATASET_FILES = [
     't2_preprocessed_masks.csv'
 ]
 
+# ==========
+# Plot GRADE
+# ==========
+def plot_grade(df, output_dir):
+    # Definisco la colonna target
+    data = df['GRADE']
 
+    # GRADE valido deve essere tra 1 e 3
+    utilizzabili = ((data >= 1) & (data <= 3)).sum()  
+    invalidi = ((data == 0) | (data < 1) | (data > 3)).sum()
+    mancanti = data.isna().sum()  # Conta i NaN
+    totale = len(df)
 
-# ====================
-# FUNZIONI DI ANALISI
-# ====================
+    # Crea figura
+    fig, ax = plt.subplots(figsize=(10, 6))
 
+    categorie = ['UTILIZZABILI\n(1-3)', 'INVALIDI\n(0 o out-of-range)', 'MANCANTI\n(NaN)']
+    valori = [utilizzabili, invalidi, mancanti]
+    colori = ['#2ecc71', '#f39c12', '#e74c3c']
 
-def analyze_dataset(dataset, nome_file):
-    """
-        Questa funzione analizza un singolo dataset ed estraggo informazioni chiave.
-        Conto le classi (benigne vs maligne), i missing values, e il numero di features reali
-        escludendo i metadati che non sono predittive.
-    """
-    try:
-        # Estraggo la colonna target dal dataset
-        target = dataset['tumor/benign']
-        
-        # Conto quanti campioni appartengono a ciascuna classe
-        numero_benigne = (target == 0.0).sum()
-        numero_maligne = (target == 1.0).sum()
-        numero_mancanti = target.isna().sum()  # Valori mancanti nel target
-        
-        # Definisco le colonne che sono metadati e non features predittive
-        # Escludo queste dal conteggio delle features perché descrivono il campione
-        metadata_colonne = ['Patient ID', 'lesion idx', 'tumor/benign', 'isTN', 
-                          'Breast', 'z_offset', 'y_offset', 'x_offset', 
-                          'Pixel Spacing', 'Slice Thickness', 'Unnamed: 0',
-                          'GRADE', 'ER [%]', 'PR [%]', 'HER2 [%]']
-        
-        # Creo una lista di feature eliminando i metadati dal totale delle colonne
-        feature_columns = [col for col in dataset.columns if col not in metadata_colonne]
-        numero_features = len(feature_columns)
-        
-        # Calcolo il totale dei missing values in tutto il dataset
-        total_missing = dataset.isna().sum().sum()
-        # Converto il conteggio assoluto in percentuale rispetto al totale delle celle
-        missing_percentage = (total_missing / (dataset.shape[0] * dataset.shape[1])) * 100
-        
-        # Creo un dizionario con tutte le informazioni estratte
-        info = {
-            'Dataset': nome_file.replace('.csv', ''),
-            'Righe': len(dataset),
-            'Colonne_Totali': len(dataset.columns),
-            'Features': numero_features,
-            'Benign': numero_benigne,
-            'Tumor': numero_maligne,
-            'Missing_Target': numero_mancanti,
-            'Missing_Total': total_missing,
-            'Missing_Percentage': missing_percentage,
-            # Determino se il dataset è bilanciato confrontando il numero di campioni per classe
-            'Bilanciamento': 'Bilanciato' if numero_benigne == numero_maligne else 'Sbilanciato'
-        }
-        
-        return info
-    
-    except Exception as e:
-        print(Fore.RED + f"Errore nell'analisi di {nome_file}: {str(e)}")
-        return None
+    # Bar chart
+    bars = ax.bar(categorie, valori, color=colori, alpha=0.8, 
+                edgecolor='black', linewidth=2, width=0.6)
 
+    # Etichette
+    ax.set_ylabel('Numero Campioni', fontsize=12, fontweight='bold')
+    ax.set_title(f'GRADE - Disponibilità per Classificatore\n(Solo valori 1-3 sono utilizzabili)', 
+                fontsize=14, fontweight='bold', pad=20)
 
+    # Grid
+    ax.grid(alpha=0.3, axis='y')
 
-def load_datasets(file_list, before_path, after_path):
-    before_info = []
-    after_info = []
-    
-    print(Fore.YELLOW + "\n" + "="*70)
-    print(Fore.YELLOW + "  CARICAMENTO E ANALISI DATASET")
-    print(Fore.YELLOW + "="*70 + "\n")
-    
-    for nome_file in file_list:
-        try:
-            # Leggo il file originale 
-            before_file = before_path / nome_file
-            if before_file.exists():
-                df_before = pd.read_csv(before_file)
-                info_before = analyze_dataset(df_before, nome_file)
-                if info_before:
-                    before_info.append(info_before)
-                    print(Fore.CYAN + f"BEFORE: {nome_file} - {df_before.shape}")
-            else:
-                print(Fore.RED + f"File BEFORE non trovato: {before_file}")
-            
-            # Leggo il file pulito
-            after_file = after_path / nome_file
-            if after_file.exists():
-                df_after = pd.read_csv(after_file)
-                info_after = analyze_dataset(df_after, nome_file)
-                if info_after:
-                    after_info.append(info_after)
-                    print(Fore.GREEN + f"AFTER:  {nome_file} - {df_after.shape}")
-            else:
-                print(Fore.RED + f"File AFTER non trovato: {after_file}")
-                
-            print()
-            
-        except FileNotFoundError:
-            print(Fore.RED + f"File non trovato: {nome_file}\n")
-        except Exception as e:
-            print(Fore.RED + f"Errore in {nome_file}: {str(e)}\n")
-    
-    return before_info, after_info
-
-
-
-# ================================
-# FUNZIONI PER GRAFICI INDIVIDUALI
-# ================================
-def plot_2_numero_features(df_before, df_after, output_dir):
-    """
-        Grafico 2: Confronto numero di features
-        
-        Visualizzo quante feature predittive rimangono dopo la pulizia.
-    """
-    plt.figure(figsize=(12, 7))
-    
-    x = np.arange(len(df_before))
-    width = 0.35
-    
-    bars1 = plt.bar(x - width/2, df_before['Features'], width, 
-                   label='BEFORE', color='#e67e22', alpha=0.8)
-    bars2 = plt.bar(x + width/2, df_after['Features'], width, 
-                   label='AFTER', color='#3498db', alpha=0.8)
-    
-    plt.xlabel('Dataset', fontweight='bold', fontsize=12)
-    plt.ylabel('Numero di Features', fontweight='bold', fontsize=12)
-    plt.title('Confronto: Complessità Dataset (Features)', 
-             fontweight='bold', fontsize=15, pad=20)
-    plt.xticks(x, df_after['Dataset'], rotation=45, ha='right', fontsize=10)
-    plt.legend(loc='upper right', frameon=True, fontsize=11)
-    plt.grid(axis='y', alpha=0.3)
-    
-    for bar in bars1:
+    # Modifico le barre 
+    for i, (bar, val) in enumerate(zip(bars, valori)):
         height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height,
-                f'{int(height)}', ha='center', va='bottom', fontsize=9, fontweight='bold')
-    for bar in bars2:
+        pct = (val / totale * 100)
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+            f'{val}\n({pct:.1f}%)',
+            ha='center', va='bottom', fontsize=12, fontweight='bold')
+
+    # Linea orizzontale a 50%
+    ax.axhline(y=totale*0.5, color='gray', linestyle='--', linewidth=1.5, 
+            alpha=0.5, label='50% del totale')
+    ax.legend(loc='upper right', fontsize=10)
+
+    # Set limite Y
+    ax.set_ylim(0, totale * 1.1)
+
+    plt.tight_layout()
+
+    # Salva il grafico
+    output_path = output_dir / 'GRADE_disponibilita_classificatore.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
+    return True
+
+
+
+# =======
+# Plot ER
+# =======
+def plot_er(df, output_dir):
+    # Definisco la colonna target
+    data = df['ER [SII]']
+
+    # Calcola i valori
+    disponibili = data.notna().sum()
+    mancanti = data.isna().sum()
+    totale = len(df)
+
+    
+    # Crea figura
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Dati per il bar chart
+    categorie = ['UTILIZZABILI\n(Per Classificatore)', 'INUTILIZZABILI\n(Mancanti)']
+    valori = [disponibili, mancanti]
+    colori = ['#2ecc71', '#e74c3c']
+    
+    # Bar chart
+    bars = ax.bar(categorie, valori, color=colori, alpha=0.8, 
+                  edgecolor='black', linewidth=2, width=0.6)
+    
+    # Etichette
+    ax.set_ylabel('Numero Campioni', fontsize=12, fontweight='bold')
+    ax.set_title(f'ER [SII]', fontsize=14, fontweight='bold', pad=20)
+    
+    # Grid
+    ax.grid(alpha=0.3, axis='y')
+    
+    # Etichette sulle barre
+    for i, (bar, val) in enumerate(zip(bars, valori)):
         height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height,
-                f'{int(height)}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+        pct = (val / totale * 100)
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+               f'{val}\n({pct:.1f}%)',
+               ha='center', va='bottom', fontsize=12, fontweight='bold')
+    
+    # Linea orizzontale a 50%
+    ax.axhline(y=totale*0.5, color='gray', linestyle='--', linewidth=1.5, 
+              alpha=0.5, label='50% del totale')
+    ax.legend(loc='upper right', fontsize=10)
+    
+    # Set limite Y
+    ax.set_ylim(0, totale * 1.1)
     
     plt.tight_layout()
-    output_path = output_dir / 'grafico_2_numero_features.png'
-    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    
+    # Salva il grafico
+    output_path = output_dir / 'ER_disponibilita_classificatore.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
-    print(Fore.GREEN + f"Salvato: {output_path.name}")
+    
+    return True
 
 
+# =======
+# Plot PR
+# =======
+def plot_pr(df, output_dir):
+# Definisco la colonna target
+    data = df['PR [SII]']
 
-def plot_3_bilanciamento_before(df_before, output_dir):
-    """
-        Grafico 3: Bilanciamento classi BEFORE
-        
-        Creo un istogramma che mostra la distribuzione delle due classi
-        (benign vs tumor) nei dataset originali. 
-    """
-    plt.figure(figsize=(12, 7))
-    
-    x = np.arange(len(df_before))
-    width = 0.35
-    
-    bars1 = plt.bar(x - width/2, df_before['Benign'], width, 
-                   label='Benign', color='#3498db', alpha=0.8)
-    bars2 = plt.bar(x + width/2, df_before['Tumor'], width, 
-                   label='Tumor', color='#e74c3c', alpha=0.8)
-    
-    plt.xlabel('Dataset', fontweight='bold', fontsize=12)
-    plt.ylabel('Numero Campioni', fontweight='bold', fontsize=12)
-    plt.title('BEFORE Cleaning: Distribuzione Classi (Tumor vs Benign)', 
-             fontweight='bold', fontsize=15, pad=20)
-    plt.xticks(x, df_before['Dataset'], rotation=45, ha='right', fontsize=10)
-    plt.legend(loc='upper right', frameon=True, fontsize=11)
-    plt.grid(axis='y', alpha=0.3)
-    
-    # Aggiungo un'etichetta "Bilanciato" se le due classi hanno lo stesso numero di campioni
-    for i, row in df_before.iterrows():
-        if row['Benign'] == row['Tumor']:
-            plt.text(i, max(row['Benign'], row['Tumor']) + 5, 
-                    'Bilanciato', ha='center', fontsize=10, 
-                    color='green', fontweight='bold')
-    
-    plt.tight_layout()
-    output_path = output_dir / 'grafico_3_bilanciamento_classi_before.png'
-    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
-    plt.close()
-    print(Fore.GREEN + f"Salvato: {output_path.name}")
+    # Calcola i valori
+    disponibili = data.notna().sum()
+    mancanti = data.isna().sum()
+    totale = len(df)
 
-
-
-def plot_4_bilanciamento_after(df_after, output_dir):
-    """
-        Grafico 4: Bilanciamento classi AFTER
-        
-        Creo lo stesso tipo di grafico di plot_3, ma per i dataset puliti.
-        Questo mi permette di verificare se il processo di cleaning ha migliorato
-        il bilanciamento delle classi.
-    """
-    plt.figure(figsize=(12, 7))
     
-    x = np.arange(len(df_after))
-    width = 0.35
+    # Crea figura
+    fig, ax = plt.subplots(figsize=(10, 6))
     
-    bars1 = plt.bar(x - width/2, df_after['Benign'], width, 
-                   label='Benign', color='#3498db', alpha=0.8)
-    bars2 = plt.bar(x + width/2, df_after['Tumor'], width, 
-                   label='Tumor', color='#e74c3c', alpha=0.8)
+    # Dati per il bar chart
+    categorie = ['UTILIZZABILI\n(Per Classificatore)', 'INUTILIZZABILI\n(Mancanti)']
+    valori = [disponibili, mancanti]
+    colori = ['#2ecc71', '#e74c3c']
     
-    plt.xlabel('Dataset', fontweight='bold', fontsize=12)
-    plt.ylabel('Numero Campioni', fontweight='bold', fontsize=12)
-    plt.title('AFTER Cleaning: Distribuzione Classi (Tumor vs Benign)', 
-             fontweight='bold', fontsize=15, pad=20)
-    plt.xticks(x, df_after['Dataset'], rotation=45, ha='right', fontsize=10)
-    plt.legend(loc='upper right', frameon=True, fontsize=11)
-    plt.grid(axis='y', alpha=0.3)
+    # Bar chart
+    bars = ax.bar(categorie, valori, color=colori, alpha=0.8, 
+                  edgecolor='black', linewidth=2, width=0.6)
     
-    for i, row in df_after.iterrows():
-        if row['Benign'] == row['Tumor']:
-            plt.text(i, max(row['Benign'], row['Tumor']) + 5, 
-                    'Bilanciato', ha='center', fontsize=10, 
-                    color='green', fontweight='bold')
+    # Etichette
+    ax.set_ylabel('Numero Campioni', fontsize=12, fontweight='bold')
+    ax.set_title(f'PR [SII]', fontsize=14, fontweight='bold', pad=20)
     
-    plt.tight_layout()
-    output_path = output_dir / 'grafico_4_bilanciamento_classi_after.png'
-    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
-    plt.close()
-    print(Fore.GREEN + f"Salvato: {output_path.name}")
-
-
-
-def plot_5_missing_values(df_before, df_after, output_dir):
-    """
-        Grafico 5: Missing valori BEFORE vs AFTER
-        
-        Creo un grafico che confronta la percentuale di missing values
-        prima e dopo la pulizia. Questa è una delle metriche più importanti
-        poiché il cleaning dovrebbe ridurre significativamente i dati mancanti.
-    """
-    plt.figure(figsize=(12, 7))
+    # Grid
+    ax.grid(alpha=0.3, axis='y')
     
-    x = np.arange(len(df_before))
-    width = 0.35
-    
-    bars1 = plt.bar(x - width/2, df_before['Missing_Percentage'], width, 
-                   label='BEFORE', color='#e74c3c', alpha=0.8)
-    bars2 = plt.bar(x + width/2, df_after['Missing_Percentage'], width, 
-                   label='AFTER', color='#2ecc71', alpha=0.8)
-    
-    plt.xlabel('Dataset', fontweight='bold', fontsize=12)
-    plt.ylabel('Missing Values (%)', fontweight='bold', fontsize=12)
-    plt.title('Confronto: Percentuale Missing Values', 
-             fontweight='bold', fontsize=15, pad=20)
-    plt.xticks(x, df_before['Dataset'], rotation=45, ha='right', fontsize=10)
-    plt.legend(loc='upper right', frameon=True, fontsize=11)
-    plt.grid(axis='y', alpha=0.3)
-    
-    for bar in bars1:
+    # Etichette sulle barre
+    for i, (bar, val) in enumerate(zip(bars, valori)):
         height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height,
-                f'{height:.1f}%', ha='center', va='bottom', fontsize=8, fontweight='bold')
-    for bar in bars2:
-        height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height,
-                f'{height:.1f}%', ha='center', va='bottom', fontsize=8, fontweight='bold')
+        pct = (val / totale * 100)
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+               f'{val}\n({pct:.1f}%)',
+               ha='center', va='bottom', fontsize=12, fontweight='bold')
+    
+    # Linea orizzontale a 50%
+    ax.axhline(y=totale*0.5, color='gray', linestyle='--', linewidth=1.5, 
+              alpha=0.5, label='50% del totale')
+    ax.legend(loc='upper right', fontsize=10)
+    
+    # Set limite Y
+    ax.set_ylim(0, totale * 1.1)
     
     plt.tight_layout()
-    output_path = output_dir / 'grafico_5_missing_values.png'
-    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    
+    # Salva il grafico
+    output_path = output_dir / 'PR_disponibilita_classificatore.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
-    print(Fore.GREEN + f"Salvato: {output_path.name}")
+    
+    return True
 
+# =========
+# Plot HER2
+# =========
+def plot_her2(df, output_dir):
+    # Definisco la colonna target
+    data = df['HER2 [SII]']
 
-# ============================================
-# FUNZIONE PRINCIPALE: GENERA TUTTI I GRAFICI
-# ============================================
+    # Calcola i valori
+    disponibili = data.notna().sum()
+    mancanti = data.isna().sum()
+    totale = len(df)
 
+    
+    # Crea figura
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Dati per il bar chart
+    categorie = ['UTILIZZABILI\n(Per Classificatore)', 'INUTILIZZABILI\n(Mancanti)']
+    valori = [disponibili, mancanti]
+    colori = ['#2ecc71', '#e74c3c']
+    
+    # Bar chart
+    bars = ax.bar(categorie, valori, color=colori, alpha=0.8, 
+                  edgecolor='black', linewidth=2, width=0.6)
+    
+    # Etichette
+    ax.set_ylabel('Numero Campioni', fontsize=12, fontweight='bold')
+    ax.set_title(f'HER2 [SII]', fontsize=14, fontweight='bold', pad=20)
+    
+    # Grid
+    ax.grid(alpha=0.3, axis='y')
+    
+    # Etichette sulle barre
+    for i, (bar, val) in enumerate(zip(bars, valori)):
+        height = bar.get_height()
+        pct = (val / totale * 100)
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+               f'{val}\n({pct:.1f}%)',
+               ha='center', va='bottom', fontsize=12, fontweight='bold')
+    
+    # Linea orizzontale a 50%
+    ax.axhline(y=totale*0.5, color='gray', linestyle='--', linewidth=1.5, 
+              alpha=0.5, label='50% del totale')
+    ax.legend(loc='upper right', fontsize=10)
+    
+    # Set limite Y
+    ax.set_ylim(0, totale * 1.1)
+    
+    plt.tight_layout()
+    
+    # Salva il grafico
+    output_path = output_dir / 'HER2_disponibilita_classificatore.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    return True
 
-def generate_all_plots(before_info, after_info, output_dir):
-    """
-        Chiamo sequenzialmente tutte le 6 funzioni di plotting.
-        Converto prima i dati in DataFrame per facilitare l'accesso ai dati,
-        poi configuro lo stile generale di seaborn e matplotlib.
-        Infine genero i grafici e stampo un sommario dei cambiamenti.
-    """
-    try:
-        # Converto le liste di dizionari in DataFrame pandas per un accesso più semplice
-        df_before = pd.DataFrame(before_info)
-        df_after = pd.DataFrame(after_info)
-        
-        # Configuro lo stile visuale globale per tutti i grafici
-        sns.set_style("whitegrid")
-        plt.rcParams['font.size'] = 10
+# =========
+# Plot isTN
+# =========
+def plot_istn(df, output_dir):
+    # Definisco la colonna target
+    data = df['isTN']
 
-        
-        print(Fore.YELLOW + "\n" + "="*70)
-        print(Fore.YELLOW + "  GENERAZIONE GRAFICI PNG SEPARATI")
-        print(Fore.YELLOW + "="*70 + "\n")
-        
-        # Chiamo tutte e 6 le funzioni di plotting nell'ordine stabilito
-        plot_2_numero_features(df_before, df_after, output_dir)
-        plot_3_bilanciamento_before(df_before, output_dir)
-        plot_4_bilanciamento_after(df_after, output_dir)
-        plot_5_missing_values(df_before, df_after, output_dir)
-        
-        print(Fore.GREEN + "\n" + "="*70)
-        print(Fore.GREEN + "  TUTTI I GRAFICI GENERATI CON SUCCESSO!")
-        print(Fore.GREEN + "="*70)
-        print(Fore.CYAN + f"\nCartella output: {output_dir}")
-        print(Fore.CYAN + f"Grafici generati: 6 PNG separati")
-        print(Fore.CYAN + f"Risoluzione: 300 DPI per ogni grafico")
-        
-        # Stampo un sommario dettagliato dei cambiamenti tra BEFORE e AFTER
-        print(Fore.YELLOW + "\n" + "="*70)
-        print(Fore.YELLOW + "  SOMMARIO DEI CAMBIAMENTI")
-        print(Fore.YELLOW + "="*70)
-        
-        # Itero su ogni dataset e mostro le differenze tra BEFORE e AFTER
-        for i in range(len(df_before)):
-            before = df_before.iloc[i]
-            after = df_after.iloc[i]
-            print(Fore.WHITE + f"\n{before['Dataset']}:")
-            # Uso la notazione +/- per mostrare se il valore è aumentato o diminuito
-            print(Fore.CYAN + f"  Righe:      {before['Righe']} → {after['Righe']} "
-                  f"({after['Righe'] - before['Righe']:+d})")
-            print(Fore.CYAN + f"  Features:   {before['Features']} → {after['Features']} "
-                  f"({after['Features'] - before['Features']:+d})")
-            print(Fore.CYAN + f"  Missing:    {before['Missing_Percentage']:.2f}% → {after['Missing_Percentage']:.2f}% "
-                  f"({after['Missing_Percentage'] - before['Missing_Percentage']:+.2f}%)")
-        
-    except Exception as e:
-        print(Fore.RED + f"\nErrore nella generazione dei grafici: {str(e)}")
-        import traceback
-        print(Fore.RED + traceback.format_exc())
+    # Calcola i valori
+    disponibili = data.notna().sum()
+    mancanti = data.isna().sum()
+    totale = len(df)
 
+    
+    # Crea figura
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Dati per il bar chart
+    categorie = ['UTILIZZABILI\n(Per Classificatore)', 'INUTILIZZABILI\n(Mancanti)']
+    valori = [disponibili, mancanti]
+    colori = ['#2ecc71', '#e74c3c']
+    
+    # Bar chart
+    bars = ax.bar(categorie, valori, color=colori, alpha=0.8, 
+                  edgecolor='black', linewidth=2, width=0.6)
+    
+    # Etichette
+    ax.set_ylabel('Numero Campioni', fontsize=12, fontweight='bold')
+    ax.set_title(f'isTN', fontsize=14, fontweight='bold', pad=20)
+    
+    # Grid
+    ax.grid(alpha=0.3, axis='y')
+    
+    # Etichette sulle barre
+    for i, (bar, val) in enumerate(zip(bars, valori)):
+        height = bar.get_height()
+        pct = (val / totale * 100)
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+               f'{val}\n({pct:.1f}%)',
+               ha='center', va='bottom', fontsize=12, fontweight='bold')
+    
+    # Linea orizzontale a 50%
+    ax.axhline(y=totale*0.5, color='gray', linestyle='--', linewidth=1.5, 
+              alpha=0.5, label='50% del totale')
+    ax.legend(loc='upper right', fontsize=10)
+    
+    # Set limite Y
+    ax.set_ylim(0, totale * 1.1)
+    
+    plt.tight_layout()
+    
+    # Salva il grafico
+    output_path = output_dir / 'isTN_disponibilita_classificatore.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    return True
 
+# ==========
+# Plot KI67
+# ==========
+def plot_ki67(df, output_dir):
 
-# =============================
-# MAIN: ESECUZIONE DELLO SCRIPT
-# =============================
+    # Definisco la colonna target
+    data = df['KI67 [%]']
 
+    # Calcola i valori
+    disponibili = data.notna().sum()
+    mancanti = data.isna().sum()
+    totale = len(df)
+
+    
+    # Crea figura
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Dati per il bar chart
+    categorie = ['UTILIZZABILI\n(Per Classificatore)', 'INUTILIZZABILI\n(Mancanti)']
+    valori = [disponibili, mancanti]
+    colori = ['#2ecc71', '#e74c3c']
+    
+    # Bar chart
+    bars = ax.bar(categorie, valori, color=colori, alpha=0.8, 
+                  edgecolor='black', linewidth=2, width=0.6)
+    
+    # Etichette
+    ax.set_ylabel('Numero Campioni', fontsize=12, fontweight='bold')
+    ax.set_title(f'KI67 [%]', fontsize=14, fontweight='bold', pad=20)
+    
+    # Grid
+    ax.grid(alpha=0.3, axis='y')
+    
+    # Etichette sulle barre
+    for i, (bar, val) in enumerate(zip(bars, valori)):
+        height = bar.get_height()
+        pct = (val / totale * 100)
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+               f'{val}\n({pct:.1f}%)',
+               ha='center', va='bottom', fontsize=12, fontweight='bold')
+    
+    # Linea orizzontale a 50%
+    ax.axhline(y=totale*0.5, color='gray', linestyle='--', linewidth=1.5, 
+              alpha=0.5, label='50% del totale')
+    ax.legend(loc='upper right', fontsize=10)
+    
+    # Set limite Y
+    ax.set_ylim(0, totale * 1.1)
+    
+    plt.tight_layout()
+    
+    # Salva il grafico
+    output_path = output_dir / 'ki67_disponibilita_classificatore.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    return True
 
 def main():
     try:
-        print(Fore.YELLOW + "\n" + "="*70)
-        print(Fore.YELLOW + "  CONFRONTO BEFORE vs AFTER DATA CLEANING")
-        print(Fore.YELLOW + "  (Generazione 6 grafici PNG separati)")
-        print(Fore.YELLOW + "="*70)
+        OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
         
-        # Carico tutti i dataset e ne estraggo le statistiche
-        before_info, after_info = load_datasets(DATASET_FILES, BEFORE_PATH, AFTER_PATH)
+        sns.set_style("whitegrid")
+        plt.rcParams['font.size'] = 10
         
-        # Verifico che il caricamento sia stato completato con successo
-        if not before_info or not after_info:
-            print(Fore.RED + "\nErrore: Nessun dataset analizzato con successo!")
-            return
-        
-        if len(before_info) != len(after_info):
-            print(Fore.YELLOW + f"\nWarning: Numero diverso di file BEFORE ({len(before_info)}) "
-                  f"e AFTER ({len(after_info)})")
-        
-        # Genero tutti i grafici
-        generate_all_plots(before_info, after_info, OUTPUT_DIR)
-        
+        for file_name in DATASET_FILES:
+            
+            try:
+                file_path = CLEANED_PATH / file_name
+                df = pd.read_csv(file_path)
+                
+                # Crea tutti i grafici
+                plot_grade(df, OUTPUT_PATH)
+                plot_er(df, OUTPUT_PATH)
+                plot_pr(df, OUTPUT_PATH)
+                plot_her2(df, OUTPUT_PATH)
+                plot_istn(df, OUTPUT_PATH)
+                plot_ki67(df, OUTPUT_PATH)
+            
+            except FileNotFoundError:
+                print(Fore.RED + f"File non trovato: {file_path}")
+            except Exception as e:
+                print(Fore.RED + f"Errore in : {e}")
     except Exception as e:
         print(Fore.RED + f"\nERRORE GENERALE: {e}")
         import traceback
         print(Fore.RED + traceback.format_exc())
-
 
 
 if __name__ == "__main__":
