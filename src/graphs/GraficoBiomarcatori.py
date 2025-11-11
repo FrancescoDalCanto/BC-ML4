@@ -4,154 +4,124 @@ import matplotlib.pyplot as plt
 import numpy as np
 from colorama import Fore, init
 
+
 init(autoreset=True)
 
+
 # Percorsi
-ORIGINAL_FILE = Path('dataset/original/medsam_dynamic.csv')
 CLEANED_FILE = Path('dataset/cleaned/medsam_dynamic.csv')
-OUTPUT_DIR_AFTER = Path('report/report_biomarcatori/after')
-OUTPUT_DIR_BEFORE= Path('report/report_biomarcatori/before')
+OUTPUT_DIR = Path('report/report_biomarcatori')
+
+
 
 # Configurazione biomarcatori
-BIOMARCATORI = {
-    'ER [SII]': {'range': (0, 3)},
-    'PR [SII]': {'range': (0, 3)},
-    'HER2 [SII]': {'range': (0, 3)},
-    'GRADE': {'range': (1, 3)},  # 0 INVALIDO
-    'isTN': {'range': (0, 1)},
-    'KI67 [%]': {'range': (0, 100)}
+BIOMARCATORI_CONFIG = {
+    'ER [SII]': {
+        'labels': {0: 'Negativo', 1: 'Positivo'},
+        'colors': ['#e74c3c', '#2ecc71']
+    },
+    'PR [SII]': {
+        'labels': {0: 'Negativo', 1: 'Positivo'},
+        'colors': ['#e74c3c', '#2ecc71']
+    },
+    'HER2 [SII]': {
+        'labels': {0: 'Negativo', 1: 'Positivo'},
+        'colors': ['#e74c3c', '#2ecc71']
+    },
+    'GRADE': {
+        'labels': {1: 'GRADE 1', 2: 'GRADE 2', 3: 'GRADE 3'},
+        'colors': ['#2ecc71', '#f39c12', '#e74c3c']
+    },
+    'isTN': {
+        'labels': {0: 'Non Triplo-Negativo', 1: 'Triplo-Negativo'},
+        'colors': ['#3498db', '#e74c3c']
+    },
+    'KI67 [%]': {
+        'bins': [0, 14, 30, 100],
+        'labels': ['Basso (<14%)', 'Medio (14-30%)', 'Alto (>30%)'],
+        'colors': ['#2ecc71', '#f39c12', '#e74c3c']
+    }
 }
 
-# ========================
-# ANALIZZA E PLOTTA BEFORE
-# ========================
-def plot_before_biomarkers(original_file, output_dir):    
-    df_before = pd.read_csv(original_file)
-    
-    print(Fore.BLUE + "\n" + "="*70)
-    print(Fore.BLUE + "GENERAZIONE GRAFICI BEFORE (DATASET SPORCO)")
-    print(Fore.BLUE + "="*70 + "\n")
-    
-    for bio, config in BIOMARCATORI.items():
-        data_before = pd.to_numeric(df_before[bio], errors='coerce')
-        min_val, max_val = config['range']
-        
-        # Calcoli
-        if bio == 'GRADE':
-            validi = ((data_before >= min_val) & (data_before <= max_val)).sum()
-            invalidi = ((data_before == 0) | (data_before < min_val) | (data_before > max_val)).sum()
-            mancanti = data_before.isna().sum()
-        else:
-            validi = data_before.notna().sum()
-            invalidi = 0
-            mancanti = data_before.isna().sum()
-        
-        # Crea figura
-        fig, ax = plt.subplots(figsize=(10, 6))
-        
-        if bio == 'GRADE':
-            categorie = ['VALIDI\n(1-3)', 'INVALIDI\n(0 o out-of-range)', 'MANCANTI']
-            valori = [validi, invalidi, mancanti]
-            colori = ['#f39c12', '#e74c3c', '#95a5a6']
-        else:
-            categorie = ['VALIDI', 'MANCANTI']
-            valori = [validi, mancanti]
-            colori = ['#f39c12', '#e74c3c']
-        
-        bars = ax.bar(categorie, valori, color=colori, alpha=0.8, edgecolor='black', linewidth=2, width=0.6)
-        
-        ax.set_ylabel('Numero Campioni', fontsize=12, fontweight='bold')
-        ax.set_title(f'{bio} - BEFORE (Dataset Sporco)', fontsize=14, fontweight='bold', pad=20)
-        ax.grid(alpha=0.3, axis='y')
-        
-        # Etichette
-        for bar, val in zip(bars, valori):
-            height = bar.get_height()
-            pct = (val / len(df_before) * 100)
-            ax.text(bar.get_x() + bar.get_width()/2., height, f'{val}\n({pct:.1f}%)', ha='center', va='bottom', fontsize=11, fontweight='bold')
-        
-        ax.axhline(y=len(df_before)*0.5, color='gray', linestyle='--', linewidth=1.5, alpha=0.4, label='50% del totale')
-        ax.legend(loc='upper right', fontsize=10)
-        ax.set_ylim(0, len(df_before) * 1.15)
-        
-        plt.tight_layout()
-        
-        # Salva
-        filename = f'{bio.replace(" ", "_").replace("[", "").replace("]", "")}_BEFORE.png'
-        output_path = output_dir / filename
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
-        plt.close()
-        
-        print(Fore.GREEN + f"Grafico creato per: {filename}")
 
 
-# =======================
-# ANALIZZA E PLOTTA AFTER
-# =======================
-def plot_after_biomarkers(cleaned_file, output_dir):
+
+def plot_biomarkers(cleaned_file, output_dir):
+
+    # Vado a leggere il csv pulito
     df_after = pd.read_csv(cleaned_file)
-    
+
+    print(Fore.YELLOW + f"\nLesioni maligne dopo pulizia: {len(df_after)}")
     print(Fore.BLUE + "\n" + "="*70)
-    print(Fore.BLUE + "GENERAZIONE GRAFICI AFTER (DATASET STANDARDIZZATO)")
+    print(Fore.BLUE + "GENERAZIONE GRAFICI DISTRIBUZIONE (SOLO LESIONI MALIGNE)")
     print(Fore.BLUE + "="*70 + "\n")
-    
-    for bio, config in BIOMARCATORI.items():
-        data_after = pd.to_numeric(df_after[bio], errors='coerce')
-        min_val, max_val = config['range']
+
+    for bio, config in BIOMARCATORI_CONFIG.items():
+        data = pd.to_numeric(df_after[bio], errors='coerce')
         
-        # Calcoli
+        # Rimuovi valori mancanti
+        data = data.dropna()
+        
+        # Vado ad arrotondare il GRADE cosi da non avere valori come 2.5
         if bio == 'GRADE':
-            validi = ((data_after >= min_val) & (data_after <= max_val)).sum()
-            invalidi = ((data_after == 0) | (data_after < min_val) | (data_after > max_val)).sum()
-            mancanti = data_after.isna().sum()
-        else:
-            validi = data_after.notna().sum()
-            invalidi = 0
-            mancanti = data_after.isna().sum()
-        
+            data = data.round()
+
+
         # Crea figura
         fig, ax = plt.subplots(figsize=(10, 6))
         
-        if bio == 'GRADE':
-            categorie = ['VALIDI\n(1-3)', 'INVALIDI\n(0 o out-of-range)', 'MANCANTI']
-            valori = [validi, invalidi, mancanti]
-            colori = ['#2ecc71', '#f39c12', '#e74c3c']
+        # Gestione per Ki-67
+        if bio == 'KI67 [%]':
+            # Discretizza in bins
+            data_binned = pd.cut(data, bins=config['bins'], labels=config['labels'], include_lowest=True)
+            value_counts = data_binned.value_counts().sort_index()
+            categorie = config['labels']
+            valori = [value_counts.get(cat, 0) for cat in categorie]
+            colori = config['colors']
         else:
-            categorie = ['VALIDI', 'MANCANTI']
-            valori = [validi, mancanti]
-            colori = ['#2ecc71', '#e74c3c']
+            if bio in ['ER [SII]', 'PR [SII]', 'HER2 [SII]']:
+                # Converti tutto ≥1 in Positivo
+                negativo = (data == 0).sum()
+                positivo = (data > 0).sum()
+                categorie = ['Negativo', 'Positivo']
+                valori = [negativo, positivo]
+                colori = config['colors']
+            else:
+                # Per GRADE e isTN uso la logica normale
+                value_counts = data.value_counts().sort_index()
+                categorie = [config['labels'][val] for val in sorted(config['labels'].keys()) if val in value_counts.index]
+                valori = [value_counts[val] for val in sorted(config['labels'].keys()) if val in value_counts.index]
+                colori = config['colors'][:len(categorie)]
         
+        # Plot
         bars = ax.bar(categorie, valori, color=colori, alpha=0.8, edgecolor='black', linewidth=2, width=0.6)
         
-        ax.set_ylabel('Numero Campioni', fontsize=12, fontweight='bold')
-        ax.set_title(f'{bio} - AFTER (Dataset Standardizzato)', fontsize=14, fontweight='bold', pad=20)
+        ax.set_ylabel('Numero Pazienti', fontsize=12, fontweight='bold')
+        ax.set_title(f'{bio} - Distribuzione Lesioni Maligne', fontsize=14, fontweight='bold', pad=20)
         ax.grid(alpha=0.3, axis='y')
         
-        # Etichette
+        # Aggiungo spazio per non far tagliare la riga del bordo col numero
+        y_max = max(valori) * 1.15 
+        ax.set_ylim(0, y_max)
+
+        # Etichette sopra le barre
         for bar, val in zip(bars, valori):
             height = bar.get_height()
-            pct = (val / len(df_after) * 100)
+            pct = (val / len(data) * 100) if len(data) > 0 else 0
             ax.text(bar.get_x() + bar.get_width()/2., height, f'{val}\n({pct:.1f}%)', ha='center', va='bottom', fontsize=11, fontweight='bold')
-        
-        ax.axhline(y=len(df_after)*0.5, color='gray', linestyle='--', linewidth=1.5, alpha=0.4, label='50% del totale')
-        ax.legend(loc='upper right', fontsize=10)
-        ax.set_ylim(0, len(df_after) * 1.15)
         
         plt.tight_layout()
         
         # Salva
-        filename = f'{bio.replace(" ", "_").replace("[", "").replace("]", "")}_AFTER.png'
+        filename = f'{bio.replace(" ", "_").replace("[", "").replace("]", "")}_distribuzione.png'
         output_path = output_dir / filename
         plt.savefig(output_path, dpi=300, bbox_inches='tight')
         plt.close()
         
-        print(Fore.GREEN + f"Grafico Creato per: {filename}")
+        print(Fore.GREEN + f" Grafico creato: {filename}")
+        print(Fore.CYAN + f"  Distribuzione: {dict(zip(categorie, valori))}")
+
 
 
 if __name__ == "__main__":
-    
-    # Per generare grafici BEFORE
-    plot_before_biomarkers(ORIGINAL_FILE, OUTPUT_DIR_BEFORE)
-    
-    # Per generare grafici AFTER
-    plot_after_biomarkers(CLEANED_FILE, OUTPUT_DIR_AFTER)
+    plot_biomarkers(CLEANED_FILE, OUTPUT_DIR)
