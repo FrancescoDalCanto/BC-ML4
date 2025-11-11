@@ -5,12 +5,15 @@ import numpy as np
 from colorama import Fore, init
 
 
+
 init(autoreset=True)
+
 
 
 # Percorsi
 CLEANED_FILE = Path('dataset/cleaned/medsam_dynamic.csv')
-OUTPUT_DIR = Path('report/report_biomarcatori/istrogrammi')
+OUTPUT_DIR = Path('report/report_biomarcatori/istogrammi')
+
 
 
 
@@ -29,8 +32,8 @@ BIOMARCATORI_CONFIG = {
         'colors': ['#e74c3c', '#2ecc71']
     },
     'GRADE': {
-        'labels': {1: 'GRADE 1', 2: 'GRADE 2', 3: 'GRADE 3'},
-        'colors': ['#2ecc71', '#f39c12', '#e74c3c']
+        'labels': {1: 'GRADE 1', 1.5: 'GRADE 1.5 (1 to 2)', 2: 'GRADE 2', 2.5:'GRADE 2.5 (2 to 3)',3: 'GRADE 3'}, 
+        'colors': ['#2ecc71', "#95a0e1", '#f39c12', "#9d3ce7", '#e74c3c']  
     },
     'isTN': {
         'labels': {0: 'Non Triplo-Negativo', 1: 'Triplo-Negativo'},
@@ -46,27 +49,26 @@ BIOMARCATORI_CONFIG = {
 
 
 
+
 def plot_biomarkers(cleaned_file, output_dir):
+
 
     # Vado a leggere il csv pulito
     df_after = pd.read_csv(cleaned_file)
+
 
     print(Fore.YELLOW + f"\nLesioni maligne dopo pulizia: {len(df_after)}")
     print(Fore.BLUE + "\n" + "="*70)
     print(Fore.BLUE + "GENERAZIONE GRAFICI DISTRIBUZIONE (SOLO LESIONI MALIGNE)")
     print(Fore.BLUE + "="*70 + "\n")
 
+
     for bio, config in BIOMARCATORI_CONFIG.items():
         data = pd.to_numeric(df_after[bio], errors='coerce')
         
         # Rimuovi valori mancanti
         data = data.dropna()
-        
-        # Vado ad arrotondare il GRADE cosi da non avere valori come 2.5
-        if bio == 'GRADE':
-            data = data.round()
-
-
+    
         # Crea figura
         fig, ax = plt.subplots(figsize=(10, 6))
         
@@ -81,17 +83,18 @@ def plot_biomarkers(cleaned_file, output_dir):
         else:
             if bio in ['ER [SII]', 'PR [SII]', 'HER2 [SII]']:
                 # Converti tutto ≥1 in Positivo
-                negativo = (data == 0).sum()
-                positivo = (data > 0).sum()
+                negativo = (data == 0.0).sum()
+                positivo = (data > 0.0).sum()
                 categorie = ['Negativo', 'Positivo']
                 valori = [negativo, positivo]
                 colori = config['colors']
             else:
                 # Per GRADE e isTN uso la logica normale
                 value_counts = data.value_counts().sort_index()
+                # Ottieni tutti i valori presenti nei dati che hanno una label definita
                 categorie = [config['labels'][val] for val in sorted(config['labels'].keys()) if val in value_counts.index]
                 valori = [value_counts[val] for val in sorted(config['labels'].keys()) if val in value_counts.index]
-                colori = config['colors'][:len(categorie)]
+                colori = [config['colors'][i] for i, val in enumerate(sorted(config['labels'].keys())) if val in value_counts.index]
         
         # Plot
         bars = ax.bar(categorie, valori, color=colori, alpha=0.8, edgecolor='black', linewidth=2, width=0.6)
@@ -103,6 +106,7 @@ def plot_biomarkers(cleaned_file, output_dir):
         # Aggiungo spazio per non far tagliare la riga del bordo col numero
         y_max = max(valori) * 1.15 
         ax.set_ylim(0, y_max)
+
 
         # Etichette sopra le barre
         for bar, val in zip(bars, valori):
@@ -120,6 +124,7 @@ def plot_biomarkers(cleaned_file, output_dir):
         
         print(Fore.GREEN + f" Grafico creato: {filename}")
         print(Fore.CYAN + f"  Distribuzione: {dict(zip(categorie, valori))}")
+
 
 
 
