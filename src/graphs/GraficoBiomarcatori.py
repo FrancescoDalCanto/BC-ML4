@@ -10,7 +10,7 @@ init(autoreset=True)
 
 # Percorsi
 CLEANED_FILE = Path('dataset/cleaned/medsam_dynamic.csv')
-OUTPUT_DIR = Path('report/report_biomarcatori')
+OUTPUT_DIR = Path('report/report_biomarcatori/istrogrammi')
 
 
 
@@ -97,7 +97,7 @@ def plot_biomarkers(cleaned_file, output_dir):
         bars = ax.bar(categorie, valori, color=colori, alpha=0.8, edgecolor='black', linewidth=2, width=0.6)
         
         ax.set_ylabel('Numero Pazienti', fontsize=12, fontweight='bold')
-        ax.set_title(f'{bio} - Distribuzione Lesioni Maligne', fontsize=14, fontweight='bold', pad=20)
+        ax.set_title(f'{bio} - Distribuzione delle Lesioni Maligne', fontsize=14, fontweight='bold', pad=20)
         ax.grid(alpha=0.3, axis='y')
         
         # Aggiungo spazio per non far tagliare la riga del bordo col numero
