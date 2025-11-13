@@ -1,7 +1,0 @@
-// PER ESEGUIRE E CHIUDERE L'ALMBIENTE:
-  avvio: source venv/bin/activate
-  chiusura: deactivate
-
-
-// Comando per installare Pythorc
-pip install torch torchvision torchaudio
