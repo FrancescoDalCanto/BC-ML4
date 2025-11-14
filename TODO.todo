@@ -1,0 +1,27 @@
+
+    # TODO: DA FARE OER OGNI MODELLO
+
+
+    # TODO: Togliere la scaler per gli alberi, tanto non mi serve
+    # TODO: Aumentare le cose su cui fare, ki67 e ER e ProcessLookupError
+    # TODO: Testare gli slpit anche a 3 
+    # TODO: sistemare la corss validazione, una volta finita ho 5 modelli per ognli calsse di alg (circa 15 risultati da mandare)
+    faccio la media sulla performance, (mando la mail con tuttee 5 le performance per ogni modello)
+
+
+
+
+
+
+
+
+
+
+    Dopo scarico il link, clinical e another features e imagin features
+
+    nell'ultimo ce ne saranno tante e vedo prima cosa fanno.
+    capire quante feature ci sono per ogni tipo.
+
+
+
+    associo alle radiomic feature le tre label che mi interessano (ER PR HER)
