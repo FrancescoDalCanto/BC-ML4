@@ -22,7 +22,7 @@ def correlazione_biomarcatori():
     # ==============
     # Tipo: Spearman
     # ==============
-    # Defiinisco la matrice di correlazione
+    # Definisco la matrice di correlazione
     matrice_correlazione = df.corr(method='spearman')
 
     # Mostro la heatmap
@@ -45,7 +45,7 @@ def correlazione_biomarcatori():
     # ==============
     # Tipo: Pearson
     # ==============
-    # Defiinisco la matrice di correlazione
+    # Definisco la matrice di correlazione
     matrice_correlazione = df.corr(method='pearson')
 
     # Mostro la heatmap
@@ -69,7 +69,7 @@ def correlazione_biomarcatori():
      # ==============
     # Tipo: Kendall
     # ==============
-    # Defiinisco la matrice di correlazione
+    # Definisco la matrice di correlazione
     matrice_correlazione = df.corr(method='kendall')
 
     # Mostro la heatmap

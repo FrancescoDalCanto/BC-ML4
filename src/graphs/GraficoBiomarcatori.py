@@ -69,7 +69,7 @@ def plot_biomarkers(cleaned_file, output_dir):
         # Rimuovi valori mancanti
         data = data.dropna()
     
-        # Crea figura
+        # Creo figura
         fig, ax = plt.subplots(figsize=(10, 6))
         
         # Gestione per Ki-67
@@ -91,7 +91,7 @@ def plot_biomarkers(cleaned_file, output_dir):
             else:
                 # Per GRADE e isTN uso la logica normale
                 value_counts = data.value_counts().sort_index()
-                # Ottieni tutti i valori presenti nei dati che hanno una label definita
+                # Ottengo tutti i valori presenti nei dati che hanno una label definita
                 categorie = [config['labels'][val] for val in sorted(config['labels'].keys()) if val in value_counts.index]
                 valori = [value_counts[val] for val in sorted(config['labels'].keys()) if val in value_counts.index]
                 colori = [config['colors'][i] for i, val in enumerate(sorted(config['labels'].keys())) if val in value_counts.index]
