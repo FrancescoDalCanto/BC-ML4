@@ -59,7 +59,7 @@ df_pivot = df_results.pivot(index='Modello', columns='Dataset',
 print(df_pivot.to_string())
 
 # Lo stampo in un formato per latex
-#print(df_pivot.to_markdown())
+print(df_pivot.to_markdown())
 
 
 # Salvo in CSV
