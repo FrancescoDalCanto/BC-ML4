@@ -2,34 +2,34 @@ import pandas as pd
 
 # Vanno inseriti a mano
 all_models_results = {
-    # Fatto
+
     'RandomForest': {
-        't2_medsam': {'mean_score': 0.788, 'std_score': 0.083},
-        't2_preprocessed': {'mean_score': 0.775, 'std_score': 0.060},
-        't2_original': {'mean_score': 0.776, 'std_score': 0.072},
-        'medsam_dynamic': {'mean_score': 0.755, 'std_score': 0.080},
-        'preprocessed_dynamic': {'mean_score': 0.770, 'std_score': 0.031},
-        'original_dynamic': {'mean_score': 0.760, 'std_score': 0.054}
+        't2_medsam': {'mean_score': 0.760, 'std_score': 0.082},
+        't2_preprocessed': {'mean_score': 0.763, 'std_score': 0.087},
+        't2_original': {'mean_score': 0.745, 'std_score': 0.106},
+        'medsam_dynamic': {'mean_score': 0.743, 'std_score': 0.075},
+        'preprocessed_dynamic': {'mean_score': 0.739, 'std_score': 0.065},
+        'original_dynamic': {'mean_score': 0.733, 'std_score': 0.063}
     },
-    # Non ho usato gli iperparametri
+
     'LogisticRegression': {
-        't2_medsam': {'mean_score': 0.660, 'std_score': 0.079},
-        't2_preprocessed': {'mean_score': 0.728, 'std_score': 0.062},
-        't2_original': {'mean_score': 0.729, 'std_score': 0.075},
-        'medsam_dynamic': {'mean_score': 0.708, 'std_score': 0.061},
-        'preprocessed_dynamic': {'mean_score': 0.706, 'std_score': 0.103},
-        'original_dynamic': {'mean_score': 0.672, 'std_score': 0.077}
+        't2_medsam': {'mean_score': 0.738, 'std_score': 0.071},
+        't2_preprocessed': {'mean_score': 0.774, 'std_score': 0.070},
+        't2_original': {'mean_score': 0.773, 'std_score': 0.058},
+        'medsam_dynamic': {'mean_score': 0.750, 'std_score': 0.052},
+        'preprocessed_dynamic': {'mean_score': 0.754, 'std_score': 0.052},
+        'original_dynamic': {'mean_score': 0.747, 'std_score': 0.050}
     },
 
     'XGBoost': {
-        't2_medsam': {'mean_score': 0.707, 'std_score': 0.105},
-        't2_preprocessed': {'mean_score': 0.723, 'std_score': 0.107},
-        't2_original': {'mean_score': 0.718, 'std_score': 0.051},
-        'medsam_dynamic': {'mean_score': 0.688, 'std_score': 0.097},
-        'preprocessed_dynamic': {'mean_score': 0.724, 'std_score': 0.075},
-        'original_dynamic': {'mean_score': 0.709, 'std_score': 0.082}
+        't2_medsam': {'mean_score': 0.778, 'std_score': 0.086},
+        't2_preprocessed': {'mean_score': 0.763, 'std_score': 0.057},
+        't2_original': {'mean_score': 0.752, 'std_score': 0.058},
+        'medsam_dynamic': {'mean_score': 0.739, 'std_score': 0.049},
+        'preprocessed_dynamic': {'mean_score': 0.759, 'std_score': 0.054},
+        'original_dynamic': {'mean_score': 0.758, 'std_score': 0.057}
     },
-    # Fatto
+
     'BoostedDecisionTree': {
         't2_medsam': {'mean_score': 0.702, 'std_score': 0.0090},
         't2_preprocessed': {'mean_score': 0.710, 'std_score': 0.107},
