@@ -1,5 +1,0 @@
-Modello,medsam_dynamic,original_dynamic,preprocessed_dynamic,t2_medsam,t2_original,t2_preprocessed
-BoostedDecisionTree,0.706 ± 0.108,0.710 ± 0.075,0.709 ± 0.061,0.702 ± 0.009,0.706 ± 0.063,0.710 ± 0.107
-LogisticRegression,0.750 ± 0.052,0.747 ± 0.050,0.754 ± 0.052,0.738 ± 0.071,0.773 ± 0.058,0.774 ± 0.070
-RandomForest,0.743 ± 0.075,0.733 ± 0.063,0.739 ± 0.065,0.760 ± 0.082,0.745 ± 0.106,0.763 ± 0.087
-XGBoost,0.739 ± 0.049,0.758 ± 0.057,0.759 ± 0.054,0.778 ± 0.086,0.752 ± 0.058,0.763 ± 0.057

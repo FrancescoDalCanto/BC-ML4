@@ -2,25 +2,25 @@ import pandas as pd
 
 # Vanno inseriti a mano
 all_models_results = {
-
+    # Torna
     'RandomForest': {
-        't2_medsam': {'mean_score': 0.760, 'std_score': 0.082},
-        't2_preprocessed': {'mean_score': 0.763, 'std_score': 0.087},
-        't2_original': {'mean_score': 0.745, 'std_score': 0.106},
-        'medsam_dynamic': {'mean_score': 0.743, 'std_score': 0.075},
-        'preprocessed_dynamic': {'mean_score': 0.739, 'std_score': 0.065},
-        'original_dynamic': {'mean_score': 0.733, 'std_score': 0.063}
+        't2_medsam': {'mean_score': 0.736, 'std_score': 0.067},
+        't2_preprocessed': {'mean_score': 0.753, 'std_score': 0.081},
+        't2_original': {'mean_score': 0.748, 'std_score': 0.104},
+        'medsam_dynamic': {'mean_score': 0.734, 'std_score': 0.055},
+        'preprocessed_dynamic': {'mean_score': 0.746, 'std_score': 0.067},
+        'original_dynamic': {'mean_score': 0.756, 'std_score': 0.064}
     },
-
+    # Torna
     'LogisticRegression': {
         't2_medsam': {'mean_score': 0.738, 'std_score': 0.071},
         't2_preprocessed': {'mean_score': 0.774, 'std_score': 0.070},
         't2_original': {'mean_score': 0.773, 'std_score': 0.058},
-        'medsam_dynamic': {'mean_score': 0.750, 'std_score': 0.052},
+        'medsam_dynamic': {'mean_score': 0.750, 'std_score': 0.059},
         'preprocessed_dynamic': {'mean_score': 0.754, 'std_score': 0.052},
         'original_dynamic': {'mean_score': 0.747, 'std_score': 0.050}
     },
-
+    # Torna
     'XGBoost': {
         't2_medsam': {'mean_score': 0.778, 'std_score': 0.086},
         't2_preprocessed': {'mean_score': 0.763, 'std_score': 0.057},
@@ -31,7 +31,7 @@ all_models_results = {
     },
 
     'BoostedDecisionTree': {
-        't2_medsam': {'mean_score': 0.702, 'std_score': 0.0090},
+        't2_medsam': {'mean_score': 0.702, 'std_score': 0.090},
         't2_preprocessed': {'mean_score': 0.710, 'std_score': 0.107},
         't2_original': {'mean_score': 0.706, 'std_score': 0.063},
         'medsam_dynamic': {'mean_score': 0.706, 'std_score': 0.108},
