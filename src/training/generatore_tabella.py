@@ -2,41 +2,41 @@ import pandas as pd
 
 # Vanno inseriti a mano
 all_models_results = {
-    # Modificato (fanno pena) => fatto
+    # ok
     'RandomForest': {
-        't2_medsam': {'mean_score': 0.524, 'std_score': 0.034},
-        't2_preprocessed': {'mean_score':  0.573, 'std_score': 0.100},
-        't2_original': {'mean_score': 0.605, 'std_score': 0.138},
-        'medsam_dynamic': {'mean_score': 0.539, 'std_score': 0.121},
-        'preprocessed_dynamic': {'mean_score': 0.506, 'std_score': 0.107},
-        'original_dynamic': {'mean_score': 0.494, 'std_score': 0.164}
+        't2_medsam': {'f1_score': 0.667, 'std_score': 0.096},
+        't2_preprocessed': {'f1_score':  0.631, 'std_score': 0.066},
+        't2_original': {'f1_score': 0.641, 'std_score': 0.070},
+        'medsam_dynamic': {'f1_score': 0.633, 'std_score': 0.073},
+        'preprocessed_dynamic': {'f1_score': 0.634, 'std_score': 0.055},
+        'original_dynamic': {'f1_score': 0.657, 'std_score': 0.077}
     },
-    # Modificato (fanno pena) => fatto
+    # ok
     'LogisticRegression': {
-        't2_medsam': {'mean_score': 0.259, 'std_score': 0.086},
-        't2_preprocessed': {'mean_score': 0.269, 'std_score': 0.094},
-        't2_original': {'mean_score': 0.275, 'std_score': 0.095},
-        'medsam_dynamic': {'mean_score': 0.481, 'std_score': 0.066},
-        'preprocessed_dynamic': {'mean_score': 0.481, 'std_score': 0.066},
-        'original_dynamic': {'mean_score': 0.481, 'std_score': 0.066}
+        't2_medsam': {'f1_score': 0.294, 'std_score': 0.117},
+        't2_preprocessed': {'f1_score': 0.244, 'std_score': 0.053},
+        't2_original': {'f1_score': 0.244, 'std_score': 0.053},
+        'medsam_dynamic': {'f1_score': 0.578, 'std_score': 0.015},
+        'preprocessed_dynamic': {'f1_score': 0.578, 'std_score': 0.015},
+        'original_dynamic': {'f1_score': 0.578, 'std_score': 0.015}
     },
-    # Modificato (fanno pena) => fatto
+
     'XGBoost': {
-        't2_medsam': {'mean_score': 0.542, 'std_score': 0.062},
-        't2_preprocessed': {'mean_score': 0.588, 'std_score': 0.129},
-        't2_original': {'mean_score': 0.565, 'std_score': 0.133},
-        'medsam_dynamic': {'mean_score': 0.536, 'std_score': 0.125},
-        'preprocessed_dynamic': {'mean_score': 0.531, 'std_score': 0.117},
-        'original_dynamic': {'mean_score': 0.482, 'std_score': 0.105}
+        't2_medsam': {'f1_score': 0.649, 'std_score': 0.095},
+        't2_preprocessed': {'f1_score': 0.608 , 'std_score': 0.104},
+        't2_original': {'f1_score': 0.638, 'std_score': 0.079},
+        'medsam_dynamic': {'f1_score': 0.552, 'std_score': 0.082},
+        'preprocessed_dynamic': {'f1_score': 0.594, 'std_score': 0.075},
+        'original_dynamic': {'f1_score': 0.628, 'std_score': 0.090}
     },
-    # Modificato (fanno pena) => fatto
+    # ok
     'BoostedDecisionTree': {
-        't2_medsam': {'mean_score': 0.491, 'std_score': 0.081},
-        't2_preprocessed': {'mean_score': 0.534, 'std_score': 0.082},
-        't2_original': {'mean_score': 0.540, 'std_score': 0.085},
-        'medsam_dynamic': {'mean_score': 0.509, 'std_score': 0.126},
-        'preprocessed_dynamic': {'mean_score': 0.488, 'std_score': 0.093},
-        'original_dynamic': {'mean_score': 0.526, 'std_score': 0.143}
+        't2_medsam': {'f1_score': 0.646, 'std_score': 0.093},
+        't2_preprocessed': {'f1_score': 0.594, 'std_score': 0.076},
+        't2_original': {'f1_score': 0.628, 'std_score': 0.049},
+        'medsam_dynamic': {'f1_score': 0.588, 'std_score': 0.024},
+        'preprocessed_dynamic': {'f1_score': 0.552, 'std_score': 0.056},
+        'original_dynamic': {'f1_score': 0.560, 'std_score': 0.083}
     }
 }
 
@@ -52,7 +52,7 @@ for model_name, datasets_results in all_models_results.items():
         table_data.append({
             'Modello': model_name,
             'Dataset': dataset_name,
-            'F1-Score (Media ± Std)': f"{metrics['mean_score']:.3f} ± {metrics['std_score']:.3f}"
+            'F1-Score (Media ± Std)': f"{metrics['f1_score']:.3f} ± {metrics['std_score']:.3f}"
         })
 
 df_results = pd.DataFrame(table_data)
