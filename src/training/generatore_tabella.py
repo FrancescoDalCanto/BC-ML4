@@ -13,12 +13,12 @@ all_models_results = {
     },
     # ok
     'LogisticRegression': {
-        't2_medsam': {'f1_score': 0.294, 'std_score': 0.117},
-        't2_preprocessed': {'f1_score': 0.244, 'std_score': 0.053},
-        't2_original': {'f1_score': 0.244, 'std_score': 0.053},
-        'medsam_dynamic': {'f1_score': 0.578, 'std_score': 0.015},
-        'preprocessed_dynamic': {'f1_score': 0.578, 'std_score': 0.015},
-        'original_dynamic': {'f1_score': 0.578, 'std_score': 0.015}
+        't2_medsam': {'f1_score': 0.582, 'std_score': 0.072},
+        't2_preprocessed': {'f1_score': 0.586, 'std_score': 0.097},
+        't2_original': {'f1_score': 0.564, 'std_score': 0.043},
+        'medsam_dynamic': {'f1_score': 0.542, 'std_score': 0.091},
+        'preprocessed_dynamic': {'f1_score': 0.521, 'std_score': 0.087},
+        'original_dynamic': {'f1_score': 0.521, 'std_score': 0.082}
     },
 
     'XGBoost': {
