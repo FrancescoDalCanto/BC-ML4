@@ -2,41 +2,41 @@ import pandas as pd
 
 # Vanno inseriti a mano
 all_models_results = {
-    # ok
+
     'RandomForest': {
-        't2_medsam': {'f1_score': 0.667, 'std_score': 0.096},
-        't2_preprocessed': {'f1_score':  0.631, 'std_score': 0.066},
-        't2_original': {'f1_score': 0.641, 'std_score': 0.070},
-        'medsam_dynamic': {'f1_score': 0.633, 'std_score': 0.073},
-        'preprocessed_dynamic': {'f1_score': 0.634, 'std_score': 0.055},
-        'original_dynamic': {'f1_score': 0.657, 'std_score': 0.077}
+        't2_medsam': {'f1_score': 0.671, 'std_score': 0.097},
+        't2_preprocessed': {'f1_score':  0.641, 'std_score': 0.066},
+        't2_original': {'f1_score': 0.652, 'std_score': 0.070},
+        'medsam_dynamic': {'f1_score': 0.614, 'std_score': 0.084},
+        'preprocessed_dynamic': {'f1_score': 0.627, 'std_score': 0.057},
+        'original_dynamic': {'f1_score': 0.646, 'std_score': 0.066}
     },
-    # ok
+ 
     'LogisticRegression': {
-        't2_medsam': {'f1_score': 0.582, 'std_score': 0.072},
-        't2_preprocessed': {'f1_score': 0.586, 'std_score': 0.097},
-        't2_original': {'f1_score': 0.564, 'std_score': 0.043},
-        'medsam_dynamic': {'f1_score': 0.542, 'std_score': 0.091},
-        'preprocessed_dynamic': {'f1_score': 0.521, 'std_score': 0.087},
-        'original_dynamic': {'f1_score': 0.521, 'std_score': 0.082}
+        't2_medsam': {'f1_score': 0.588, 'std_score': 0.057},
+        't2_preprocessed': {'f1_score': 0.582, 'std_score': 0.084},
+        't2_original': {'f1_score': 0.586, 'std_score': 0.063},
+        'medsam_dynamic': {'f1_score': 0.542, 'std_score': 0.067},
+        'preprocessed_dynamic': {'f1_score': 0.556, 'std_score': 0.081},
+        'original_dynamic': {'f1_score': 0.524, 'std_score': 0.060}
     },
 
     'XGBoost': {
-        't2_medsam': {'f1_score': 0.649, 'std_score': 0.095},
-        't2_preprocessed': {'f1_score': 0.608 , 'std_score': 0.104},
-        't2_original': {'f1_score': 0.638, 'std_score': 0.079},
-        'medsam_dynamic': {'f1_score': 0.552, 'std_score': 0.082},
-        'preprocessed_dynamic': {'f1_score': 0.594, 'std_score': 0.075},
-        'original_dynamic': {'f1_score': 0.628, 'std_score': 0.090}
+        't2_medsam': {'f1_score': 0.654, 'std_score': 0.100},
+        't2_preprocessed': {'f1_score': 0.608 , 'std_score': 0.105},
+        't2_original': {'f1_score': 0.642, 'std_score': 0.080},
+        'medsam_dynamic': {'f1_score': 0.556, 'std_score': 0.088},
+        'preprocessed_dynamic': {'f1_score': 0.603, 'std_score': 0.090},
+        'original_dynamic': {'f1_score': 0.627, 'std_score': 0.083}
     },
-    # ok
+    
     'BoostedDecisionTree': {
-        't2_medsam': {'f1_score': 0.646, 'std_score': 0.093},
-        't2_preprocessed': {'f1_score': 0.594, 'std_score': 0.076},
-        't2_original': {'f1_score': 0.628, 'std_score': 0.049},
-        'medsam_dynamic': {'f1_score': 0.588, 'std_score': 0.024},
-        'preprocessed_dynamic': {'f1_score': 0.552, 'std_score': 0.056},
-        'original_dynamic': {'f1_score': 0.560, 'std_score': 0.083}
+        't2_medsam': {'f1_score': 0.611, 'std_score': 0.089},
+        't2_preprocessed': {'f1_score': 0.534, 'std_score': 0.055},
+        't2_original': {'f1_score': 0.589, 'std_score': 0.059},
+        'medsam_dynamic': {'f1_score': 0.544, 'std_score': 0.036},
+        'preprocessed_dynamic': {'f1_score': 0.567, 'std_score': 0.092},
+        'original_dynamic': {'f1_score': 0.579, 'std_score': 0.068}
     }
 }
 
