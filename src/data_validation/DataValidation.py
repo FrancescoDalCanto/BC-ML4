@@ -13,7 +13,7 @@ def DataValidation(dataset, nome_file):
 
 
     #=====================================
-    # Step 1: Controllo del tipo di dati
+    # Controllo del tipo di dati
     #=====================================
     try:
         colonne_numeriche = dataset.select_dtypes(include=['number']).columns
@@ -24,7 +24,7 @@ def DataValidation(dataset, nome_file):
         print(Fore.RED + f"Errore nel controllo tipo di dati: {e}")
     
     #=====================================
-    # Step 2: Controlli di completezza
+    # Controlli di completezza
     #=====================================
     try:
         dati_mancanti = dataset.isnull().sum()
@@ -42,12 +42,11 @@ def DataValidation(dataset, nome_file):
 
 
     #=====================================
-    # Step 3: Controlli di coerenza
+    # Controlli di coerenza
     #=====================================
     try:
         motivo_errori = []
         
-        # Controlli specifici per colonne che EFFETTIVAMENTE esistono
         if 'tumor/benign' in dataset.columns:
             valori_validi = dataset['tumor/benign'].isin([0.0, 1.0])
             if not valori_validi.all():
@@ -71,25 +70,23 @@ def DataValidation(dataset, nome_file):
                 if negativi > 0:
                     motivo_errori.append(f"{col}: {negativi} valori negativi")
         
-        # MODIFICATO: Controllo i biomarcatori IHC
-        # Ora accetto anche i valori intermedi (1.5, 2.5) generati dalla standardizzazione
         biomarcatori_ihc = ['ER [SII]', 'PR [SII]', 'HER2 [SII]']
         for bio in biomarcatori_ihc:
             if bio in dataset.columns:
                 # Ignoro i NaN per questo controllo
                 valori_non_nan = dataset[bio].dropna()
                 if len(valori_non_nan) > 0:
-                    # Accetto valori interi (0, 1, 2, 3) e intermedi (1.5, 2.5)
+                    # Accetto valori interi e intermedi 
                     valori_validi = valori_non_nan.isin([0, 1, 1.5, 2, 2.5, 3])
                     if not valori_validi.all():
                         invalidi = (~valori_validi).sum()
                         motivo_errori.append(f"{bio}: {invalidi} valori non validi (attesi: 0, 1, 1.5, 2, 2.5, 3)")
         
-        # Controllo GRADE (accetta anche 1.5, 2.5)
+        # Controllo GRADE 
         if 'GRADE' in dataset.columns:
             valori_non_nan = dataset['GRADE'].dropna()
             if len(valori_non_nan) > 0:
-                # Accetto valori tra 1 e 3, inclusi intermedi (1.5, 2.5)
+                # Accetto valori tra 1 e 3, inclusi intermedi 
                 valori_validi = (valori_non_nan >= 1) & (valori_non_nan <= 3)
                 if not valori_validi.all():
                     invalidi = (~valori_validi).sum()
@@ -117,7 +114,7 @@ def DataValidation(dataset, nome_file):
 
 
     #=====================================
-    # Step 4: Controlli di unicità
+    # Controlli di unicità
     #=====================================
     try:
         duplicati = dataset.duplicated().sum()
@@ -136,7 +133,7 @@ def DataValidation(dataset, nome_file):
 
 
     #=====================================
-    # Step 5: Controlli di formato
+    # Controlli di formato
     #=====================================
     try:
         errori_formato = []
@@ -152,16 +149,31 @@ def DataValidation(dataset, nome_file):
             if invalidi > 0:
                 errori_formato.append(f"Slice Thickness: {invalidi} valori non positivi")
         
-        # Controllo Patient ID formato
+        # Controllo Patient ID formato (diverso per AMBL e DUKE)
         if 'Patient ID' in dataset.columns:
-            # Creo un regex, mi cerca tutti i pazienti del tipo AMBL-<numero>
-            pattern = r'^AMBL-\d{3,}$'
-            # Tramite la tilde inverto i valori booleani
-            # In pratica vado a contare quanti patientID non corrispondono al regex richiesto
-            invalidi = (~dataset['Patient ID'].astype(str).str.match(pattern)).sum()
-            if invalidi > 0:
-                errori_formato.append(f"Patient ID: {invalidi} ID non nel formato AMBL-XXX")
-        
+            # Normalizzo il nome file
+            nome_lower = str(nome_file).lower()
+            # Normalizzo anche la colonna come stringa ripulita
+            pid = dataset['Patient ID'].astype(str).str.strip()
+
+            # AMBL: voglio formato AMBL-XXX (almeno 3 cifre)
+            if nome_lower.startswith("ambl"):
+                pattern = r'^AMBL-\d{3,}$'
+                invalidi = (~pid.str.match(pattern)).sum()
+                if invalidi > 0:
+                    errori_formato.append(
+                        f"Patient ID: {invalidi} ID non nel formato AMBL-XXX"
+                    )
+
+            # DUKE: voglio solo cifre, almeno 3
+            elif nome_lower.startswith("duke"):
+                pattern = r'^DUKE_\d{3,}$'
+                invalidi = (~pid.str.match(pattern)).sum()
+                if invalidi > 0:
+                    errori_formato.append(
+                        f"Patient ID: {invalidi} ID non nel formato DUKE-XXX"
+                    )
+
         if len(errori_formato) == 0:
             print("Tutti i formati sono validi")
             check += 1
@@ -169,6 +181,7 @@ def DataValidation(dataset, nome_file):
             print(Fore.RED + f"Problemi di formato:\n{chr(10).join(errori_formato)}")
     except Exception as e:
         print(Fore.RED + f"Errore nel controllo formato: {e}")
+
 
 
 

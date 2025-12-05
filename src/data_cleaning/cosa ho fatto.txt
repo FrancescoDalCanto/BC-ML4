@@ -1,0 +1,96 @@
+ COSA HO FATTO PER LA PULIZIA DEI NUOVI DATASET
+
+
+ Aggiornamento della pipeline di pulizia del dataset
+
+Nel processo di revisione della pipeline di data cleaning, sono stati introdotti diversi miglioramenti strutturali per garantire una maggiore coerenza, affidabilità e qualità dei dati provenienti dai dataset AMBL e DUKE.
+Gli interventi principali hanno riguardato:
+
+1. Uniformazione dei nomi delle colonne dei biomarcatori (ER, PR, HER2)
+
+I due dataset presentavano etichette diverse per gli stessi marcatori biologici.
+Ho quindi reso omogenee le colonne, rinominando automaticamente:
+
+ER → ER [SII]
+
+PR → PR [SII]
+
+HER2 → HER2 [SII]
+
+Questo mi permette di applicare la stessa logica di pulizia e validazione a entrambi i dataset.
+
+2. Standardizzazione delle variabili cliniche
+
+Ho implementato tre funzioni dedicate alla normalizzazione delle principali variabili:
+
+KI-67 [%]: gestione di valori numerici, categoriali (low/intermediate/high), intervalli (“15 to 30”), valori mancanti e anomalie.
+
+GRADE: trasformazione coerente dei valori in range [1–3], con supporto per intervalli e casi non numerici.
+
+Marcatori IHC (ER, PR, HER2): mapping su scala 0–3, includendo categorie, intervalli e valori intermedi (1.5, 2.5).
+
+Questa standardizzazione permette di utilizzare feature cliniche consistenti nei modelli di machine learning.
+
+3. Imputazione dei valori mancanti
+
+Per evitare che il dataset venisse invalidato dal controllo di completezza, ho imputato i valori mancanti dei marcatori biologici utilizzando la mediana della colonna standardizzata.
+In questo modo:
+
+non perdo informazioni eliminando righe,
+
+mantengo valori coerenti con la distribuzione reale dei biomarcatori.
+
+4. Normalizzazione del Patient ID
+
+Le due coorti utilizzano formati diversi per identificare il paziente.
+Per garantire la validazione del formato:
+
+nei dataset AMBL ho mantenuto il formato AMBL-XXX;
+
+nei dataset DUKE ho rimosso automaticamente prefissi come DUKE_ o DUKE- e convertito ID numerici non puliti (291.0, 305.00, ecc.) nel formato valido 291.
+
+Questo intervento ha risolto il problema principale che impediva al DUKE di superare la validazione.
+
+5. Gestione di isTN
+
+Ho reso stabile e binaria la variabile triple negative:
+
+conversione a numerico,
+
+riempimento dei NA,
+
+trasformazione esplicita in valori binari 0/1.
+
+6. Rimozione sicura delle colonne inutili
+
+È stata mantenuta una lista centralizzata delle colonne da eliminare, così da garantire una struttura uniforme a tutti i file puliti.
+
+7. Revisione dei controlli di DataValidation
+
+La classe DataValidation ora verifica correttamente:
+
+tipo dei dati,
+
+completezza,
+
+coerenza delle feature cliniche,
+
+assenza di duplicati,
+
+formato di Patient ID.
+
+Dopo gli aggiornamenti, entrambi i dataset superano tutti e 5 i controlli previsti.
+
+✔️ Risultato finale
+
+La pipeline di pulizia:
+
+è più robusta, modulare e leggibile,
+
+gestisce automaticamente differenze tra dataset,
+
+produce file consistenti e pronti per l’elaborazione statistica e per l’addestramento dei modelli ML,
+
+garantisce che l’intero dataset soddisfi i criteri di validazione.
+
+Se vuoi, posso trasformare questo paragrafo in testo accademico, bullet points più sintetici oppure integrarlo direttamente nella tua tesi.

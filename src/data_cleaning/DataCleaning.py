@@ -23,6 +23,7 @@ PATH_CLEANED_DATASET = DATASET_PATH / 'cleaned'
 
 
 # Lista dei CSV da pulire
+"""
 FILENAME = [
     'medsam_dynamic.csv',
     'original_dynamic.csv',
@@ -30,6 +31,12 @@ FILENAME = [
     't2_medsam_masks.csv',
     't2_original_masks.csv',
     't2_preprocessed_masks.csv'
+]
+"""
+
+FILENAME = [
+    'ambl_lesions.csv',
+    'duke_lesions.csv'
 ]
 
 
@@ -271,64 +278,83 @@ def standardizzazione_IHC(val):
 # **************************************
 def clean_dataset(dataset):
     """
-    Vado a rimuovere le colonne che non mi servono     
+    In questa funzione mi occupo di:
+    - uniformare i nomi delle colonne legate ai biomarcatori (ER, PR, HER2)
+    - rimuovere le colonne che non mi servono
+    - filtrare eventuali casi benigni (se la colonna tumor/benign è presente)
+    - standardizzare GRADE, KI67 e i marcatori IHC
+    - ripulire e binarizzare isTN
+    - normalizzare il formato del Patient ID per far passare i controlli di formato
     """
-    dataset = dataset.drop(columns=[col for col in colonne_da_rimuovere if col in dataset.columns]) 
 
-    # Vado a cancellare le righe che si riferiscono al tumore benigno, visto che mi interessa solo il maligno
-    dataset = dataset.drop(dataset[dataset["tumor/benign"]==0].index, axis=0)
+    # Rendo coerenti i nomi delle colonne per i biomarcatori
+    rename = {}
+    if "ER [SII]" not in dataset.columns and "ER" in dataset.columns:
+        rename["ER"] = "ER [SII]"
+    if "PR [SII]" not in dataset.columns and "PR" in dataset.columns:
+        rename["PR"] = "PR [SII]"
+    if "HER2 [SII]" not in dataset.columns and "HER2" in dataset.columns:
+        rename["HER2"] = "HER2 [SII]"
 
-    """
-    Standardizzo GRADE istologico
-    """
+    if rename:
+        dataset = dataset.rename(columns=rename)
+
+    # Rimuovo tutte le colonne che ho marcato come non utili
+    dataset = dataset.drop(columns=[col for col in colonne_da_rimuovere if col in dataset.columns])
+
+    # Se ho la colonna tumor/benign, rimuovo le lesioni benigne (0)
+    # Per DUKE la colonna non c'è ed è corretto così (solo lesioni maligne)
+    if "tumor/benign" in dataset.columns:
+        dataset = dataset.drop(dataset[dataset["tumor/benign"] == 0].index, axis=0)
+
+    # Standardizzo il GRADE istologico, se presente
     if 'GRADE' in dataset.columns:
         dataset['GRADE'] = dataset['GRADE'].apply(standardizzazione_grade)
 
-    """
-    Vado a standardizzare ki-67[%] da categorico/numerico
-    """
+    # Standardizzo KI67 [%], se presente
     if 'KI67 [%]' in dataset.columns:
-        # Applica la funzione che gestisce tutti questi casi
         dataset['KI67 [%]'] = dataset['KI67 [%]'].apply(standardizzazione_ki67)
 
-
-    """
-    Vado a standardizzare i marcatori biologici
-    """
+    # Standardizzo i marcatori biologici IHC, se presenti
     if 'ER [SII]' in dataset.columns:
         dataset['ER [SII]'] = dataset['ER [SII]'].apply(standardizzazione_IHC)
-
 
     if 'PR [SII]' in dataset.columns:
         dataset['PR [SII]'] = dataset['PR [SII]'].apply(standardizzazione_IHC)
 
-
     if 'HER2 [SII]' in dataset.columns:
         dataset['HER2 [SII]'] = dataset['HER2 [SII]'].apply(standardizzazione_IHC)
 
+    # Imputo i valori mancanti dei marcatori IHC con la mediana
+    for bio in ['ER [SII]', 'PR [SII]', 'HER2 [SII]']:
+        if bio in dataset.columns:
+            mediana = dataset[bio].median(skipna=True)
+            if not pd.isna(mediana):
+                dataset[bio] = dataset[bio].fillna(mediana)
 
-
-    """
-    Vado a standardizzare isTN (isTripleNegative)
-    """
+    # Standardizzo isTN (isTripleNegative), se presente
     if 'isTN' in dataset.columns:
-
-
-        # Converto da obj a numerico
-        # isTN è una colonna binaria: 0 o 1
         dataset['isTN'] = pd.to_numeric(dataset['isTN'], errors='coerce')
-
-
-        # Sostituisco i valori mancanti (NaN) con 0
         dataset['isTN'] = dataset['isTN'].fillna(0)
-
-
-        # Converto il valore in binario: 0 o 1
-        # Qualsiasi valore != 1 diventa 0
         dataset['isTN'] = (dataset['isTN'] == 1).astype(int)
 
+    # Normalizzo il formato del Patient ID, se presente
+    if 'Patient ID' in dataset.columns:
+        # Porto tutto a stringa ripulita
+        pid = dataset['Patient ID'].astype(str).str.strip()
+
+        # Per i casi tipo "291", "291.0", "305.00" li porto a intero e poi a stringa pura
+        mask_floatlike = pid.str.match(r'^\d+(\.0+)?$')
+        if mask_floatlike.any():
+            pid_loc = pid[mask_floatlike].astype(float).astype(int).astype(str)
+            pid.loc[mask_floatlike] = pid_loc
+
+        # Assegno la colonna normalizzata
+        dataset['Patient ID'] = pid
 
     return dataset
+
+
 
 
 
@@ -340,7 +366,8 @@ def process_all_file():
         for nome_file in FILENAME:
             try:
                 # Percorso del file originale
-                RAW_PATH_DATASET = DATASET_PATH / "original" / nome_file
+                #RAW_PATH_DATASET = DATASET_PATH / "original" / nome_file
+                RAW_PATH_DATASET = DATASET_PATH / "new_dataset" / nome_file
                 # File di output
                 OUTPUT_FILE = PATH_CLEANED_DATASET / nome_file
 
