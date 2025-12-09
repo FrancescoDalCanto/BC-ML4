@@ -23,20 +23,16 @@ PATH_CLEANED_DATASET = DATASET_PATH / 'cleaned'
 
 
 # Lista dei CSV da pulire
-"""
+
 FILENAME = [
+    'ambl_lesions.csv',
+    'duke_lesions.csv',
     'medsam_dynamic.csv',
     'original_dynamic.csv',
     'preprocessed_dynamic.csv',
     't2_medsam_masks.csv',
     't2_original_masks.csv',
     't2_preprocessed_masks.csv'
-]
-"""
-
-FILENAME = [
-    'ambl_lesions.csv',
-    'duke_lesions.csv'
 ]
 
 
