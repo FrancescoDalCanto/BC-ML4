@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import sys
 from pathlib import Path
-
+import re
 
 from colorama import Fore, init
 # Resetto il colore dopo ogni print
@@ -23,8 +23,9 @@ PATH_CLEANED_DATASET = DATASET_PATH / 'cleaned'
 
 
 # Lista dei CSV da pulire
-
 FILENAME = [
+    'ambl_lesions_radiomic_medsam.csv',
+    'duke_lesions_radiomic_medsam.csv',
     'ambl_lesions.csv',
     'duke_lesions.csv',
     'medsam_dynamic.csv',
@@ -53,13 +54,28 @@ colonne_da_rimuovere = [
     'TemporalResolution 2',
     'TemporalResolution 3',
     'TemporalResolution 4',
-    'TemporalResolution 5',
-    'ER [%]',       
-    'PR [%]',       
-    'HER2 [%]',             
+    'TemporalResolution 5',            
 ]
 
 
+def standardizzazione_percentuale(val):
+    """
+    Converte valori tipo: 80, '80', '80%', ' 80 % ' in float 0-100.
+    Gestisce -1, nan, none, '' -> NaN.
+    """
+    if pd.isna(val):
+        return np.nan
+
+    s = str(val).lower().strip()
+    if s in ['-1', '-1.0', '', 'nan', 'none']:
+        return np.nan
+
+    m = re.search(r'(\d+(\.\d+)?)', s)
+    if not m:
+        return np.nan
+
+    x = float(m.group(1))
+    return x if 0 <= x <= 100 else np.nan
 
 # **************************************
 #   Funzione per standardizzare il ki-67
@@ -274,82 +290,46 @@ def standardizzazione_IHC(val):
 # **************************************
 def clean_dataset(dataset):
     """
-    In questa funzione mi occupo di:
-    - uniformare i nomi delle colonne legate ai biomarcatori (ER, PR, HER2)
-    - rimuovere le colonne che non mi servono
-    - filtrare eventuali casi benigni (se la colonna tumor/benign è presente)
-    - standardizzare GRADE, KI67 e i marcatori IHC
-    - ripulire e binarizzare isTN
-    - normalizzare il formato del Patient ID per far passare i controlli di formato
+    Rimuovo colonne inutili + standardizzo alcune colonne cliniche.
+    Mantengo e pulisco ER/PR/HER2 [%] se presenti.
     """
 
-    # Rendo coerenti i nomi delle colonne per i biomarcatori
-    rename = {}
-    if "ER [SII]" not in dataset.columns and "ER" in dataset.columns:
-        rename["ER"] = "ER [SII]"
-    if "PR [SII]" not in dataset.columns and "PR" in dataset.columns:
-        rename["PR"] = "PR [SII]"
-    if "HER2 [SII]" not in dataset.columns and "HER2" in dataset.columns:
-        rename["HER2"] = "HER2 [SII]"
-
-    if rename:
-        dataset = dataset.rename(columns=rename)
-
-    # Rimuovo tutte le colonne che ho marcato come non utili
+    # Drop colonne non utili (NON droppare le % biomarker)
     dataset = dataset.drop(columns=[col for col in colonne_da_rimuovere if col in dataset.columns])
 
-    # Se ho la colonna tumor/benign, rimuovo le lesioni benigne (0)
-    # Per DUKE la colonna non c'è ed è corretto così (solo lesioni maligne)
+    # Filtro benigni SOLO se esiste la colonna
     if "tumor/benign" in dataset.columns:
         dataset = dataset.drop(dataset[dataset["tumor/benign"] == 0].index, axis=0)
+    else:
+        print(Fore.YELLOW + "ATTENZIONE: 'tumor/benign' non presente -> salto filtro benigni")
 
-    # Standardizzo il GRADE istologico, se presente
+    # GRADE
     if 'GRADE' in dataset.columns:
         dataset['GRADE'] = dataset['GRADE'].apply(standardizzazione_grade)
 
-    # Standardizzo KI67 [%], se presente
+    # KI67
     if 'KI67 [%]' in dataset.columns:
         dataset['KI67 [%]'] = dataset['KI67 [%]'].apply(standardizzazione_ki67)
 
-    # Standardizzo i marcatori biologici IHC, se presenti
+    # ===== Biomarker in percentuale (preferiti) =====
+    for col in ['ER [%]', 'PR [%]', 'HER2 [%]']:
+        if col in dataset.columns:
+            dataset[col] = dataset[col].apply(standardizzazione_percentuale)
+
+    # ===== Se esistono solo versioni [SII], tienile/standardizzale (opzionale) =====
     if 'ER [SII]' in dataset.columns:
         dataset['ER [SII]'] = dataset['ER [SII]'].apply(standardizzazione_IHC)
-
     if 'PR [SII]' in dataset.columns:
         dataset['PR [SII]'] = dataset['PR [SII]'].apply(standardizzazione_IHC)
-
     if 'HER2 [SII]' in dataset.columns:
         dataset['HER2 [SII]'] = dataset['HER2 [SII]'].apply(standardizzazione_IHC)
 
-    # Imputo i valori mancanti dei marcatori IHC con la mediana
-    for bio in ['ER [SII]', 'PR [SII]', 'HER2 [SII]']:
-        if bio in dataset.columns:
-            mediana = dataset[bio].median(skipna=True)
-            if not pd.isna(mediana):
-                dataset[bio] = dataset[bio].fillna(mediana)
-
-    # Standardizzo isTN (isTripleNegative), se presente
+    # isTN
     if 'isTN' in dataset.columns:
-        dataset['isTN'] = pd.to_numeric(dataset['isTN'], errors='coerce')
-        dataset['isTN'] = dataset['isTN'].fillna(0)
+        dataset['isTN'] = pd.to_numeric(dataset['isTN'], errors='coerce').fillna(0)
         dataset['isTN'] = (dataset['isTN'] == 1).astype(int)
 
-    # Normalizzo il formato del Patient ID, se presente
-    if 'Patient ID' in dataset.columns:
-        # Porto tutto a stringa ripulita
-        pid = dataset['Patient ID'].astype(str).str.strip()
-
-        # Per i casi tipo "291", "291.0", "305.00" li porto a intero e poi a stringa pura
-        mask_floatlike = pid.str.match(r'^\d+(\.0+)?$')
-        if mask_floatlike.any():
-            pid_loc = pid[mask_floatlike].astype(float).astype(int).astype(str)
-            pid.loc[mask_floatlike] = pid_loc
-
-        # Assegno la colonna normalizzata
-        dataset['Patient ID'] = pid
-
     return dataset
-
 
 
 
@@ -362,8 +342,7 @@ def process_all_file():
         for nome_file in FILENAME:
             try:
                 # Percorso del file originale
-                #RAW_PATH_DATASET = DATASET_PATH / "original" / nome_file
-                RAW_PATH_DATASET = DATASET_PATH / "new_dataset" / nome_file
+                RAW_PATH_DATASET = DATASET_PATH / "original" / nome_file
                 # File di output
                 OUTPUT_FILE = PATH_CLEANED_DATASET / nome_file
 
