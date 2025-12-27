@@ -68,5 +68,5 @@ legend_handles = [
 plt.legend(handles=legend_handles, loc="lower right")
 
 plt.tight_layout()
-plt.savefig("boxplot_auc_duke_radiomic_vs_duke.png", dpi=300)
+plt.savefig("report/boxplot/boxplot_auc_duke_radiomic_vs_duke.png", dpi=300)
 plt.show()
