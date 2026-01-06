@@ -1,0 +1,404 @@
+\chapter{Materiali e Metodi}\label{cap:materiali_metodi}
+
+Il seguente capitolo si pone l'obiettivo di descrivere in maniera analitica e dettagliata l'intero flusso di lavoro adottato per la realizzazione dello studio sperimentale, oggetto di questa tesi. In particolare, verranno illustrate le caratteristiche dei dataset clinici utilizzati, le procedure metodologiche applicate per la preparazione dei dati e gli algoritmi di Machine Learning implementati per la predizione dei biomarcatori clinici: 
+\begin{itemize}
+    \item recettore per gli estrogeni (ER)
+    \item recettore per il progesterone (PR)
+    \item Human Epidermal growth factor Receptor 2 (HER2)
+    \item indice di proliferazione Ki-67
+\end{itemize}
+\noindent La prima parte (Sezione \ref{sec-dataset}) descrive i materiali usati nello studio. Verranno analizzati due dataset clinici indipendenti (AMBL e Duke), ai quali è stata
+applicata la medesima pipeline di preprocessing, estrazione delle feature e addestramento/validazione dei modelli di Machine Learning.\\
+
+\noindent Nel presente studio, i due dataset (AMBL e Duke) sono stati considerati come insiemi indipendenti. Tutte le fasi descritte nelle sezioni successive (Sezione~\ref{sec-data-processing}, Sezione~\ref{sec-data-cleaning} e Sezione~\ref{sec-Mod&Add}) sono state applicate separatamente a ciascun dataset, evitando qualsiasi forma di fusione o contaminazione dei dati.
+
+
+\section{Dataset} \label{sec-dataset}
+I dataset utilizzati in questo studio sono due: l’Advanced MRI Breast Lesions dataset (AMBL) \cite{daniels2024advanced, tcia} e il Duke Breast MRI dataset \cite{dukeMRI,
+pineda2019radiomics}.\\
+L’Advanced Magnetic Resonance Imaging (MRI) Breast Lesions dataset rappresenta una delle
+risorse pubbliche più complete per la ricerca radiomica applicata al tumore della
+mammella su risonanza magnetica \cite{daniels2024advanced}.\\
+L'Advanced MRI Breast Lesion è un dataset retrospettivo sviluppato presso l'University of Wisconsin–Madison, la quale gestisce da anni attività di ricerca nell'ambito dell'imaging per la diagnosi e la caratterizzazione del tumore al seno \cite{daniels2024advanced, tcia}. Il dataset è stato reso pubblico e accessibile dal "The Cancer Imaging Archive" (TCIA) \cite{tcia}. Il TCIA è una repository di immagini mediche e dati clinici anonimizzati, a disposizione della comunità scientifica per favorire lo sviluppo di metodologie computazionali in ambito oncologico \cite{tcia}. Il TCIA costituisce un punto di riferimento per la comunità poiché adotta rigorose procedure di controllo della qualità e dell'anonimizzazione, elementi essenziali per garantire l'utilizzabilità dei dati nell'ambito della ricerca quantitativa.
+
+
+\subsection{Advanced MRI Breast Lesions dataset}
+Il dataset raccoglie informazioni cliniche e radiomiche relative a 200 pazienti sottoposte a risonanza magnetica della mammella, integrate con maschere di segmentazione manuali delle lesioni e variabili cliniche derivate anche da esami istologici. Ogni paziente può presentare una, più lesioni o nessuna lesione e questo implica che la dimensione effettiva del dataset in termini di numero di campioni utilizzabili è diversa rispetto al numero di pazienti.\\
+Ogni caso clinico comprende una combinazione di immagini di Magnetic Resonance Imaging (MRI), metadati radiologici e annotazioni, costituendo una risorsa complessa per studi di radiomica, Deep Learning e modellazione predittiva.\\
+Poiché una stessa paziente puó presentare piú lesioni, il soggetto di analisi é la singola lesione, che viene trattata come campione indipendente nella fase di estrazione delle feature. Pertanto il numero di campioni utilizzati nei modelli di Machine Learning non coincide con il numero di pazienti ma con il numero totale di lesioni annotate.\\
+Dal momento che  l’unità di analisi sia la singola lesione, le lesioni appartenenti alla stessa paziente non sono state trattate come indipendenti nella fase di validazione. Al fine di evitare fenomeni di 
+data leakage, tutte le lesioni associate allo stesso PatientID sono state assegnate alla medesima fold 
+durante la procedura di cross-validation \cite{roberts2021common}.
+
+
+\vspace{0.4cm}
+\noindent
+\textbf{Per ogni paziente il dataset include:}
+
+\begin{itemize}
+    \item \textbf{Immagini di Magnetic Resonance Imaging (MRI) multiparametriche}:
+    sequenze T2-weighted e sequenze dinamiche T1-weighted di tipo Dynamic Contrast-Enhanced Magnetic Resonance Imaging (DCE-MRI) acquisite in cinque stadi, di cui una fase pre-contrasto e quattro fasi post-contrasto, in formato DICOM.
+\end{itemize}
+
+\noindent Le sequenze T1-weighted e T2-weighted forniscono informazioni complementari sulle proprietà dei tessuti. In particolar modo, immagini T1-weighted vanno ad aumentare il contrasto anatomico. Le immagini T2-weighted invece evidenziano regioni a maggiore contenuto idrico. Nel contesto dell'imaging mammario, le sequenze dinamiche T1-weighted eseguite fatte dopo la somministrazione del mezzo di contrasto consentono di analizzare la evoluzione del segnale lesionale nel tempo \cite{CoriaskoRampadoBradac2014MRI}. \\
+La DCE-MRI riveste un ruolo centrale nello studio del tumore mammario poiché la dinamica di assorbimento e rilascio del mezzo di contrasto è correlata ai processi di angiogenesi e alle proprietà microvascolari della lesione. In letteratura, pattern di enhancement rapido e wash-out precoce sono frequentemente associati a lesioni maligne e a profili biologici più aggressivi, rendendo queste informazioni particolarmente rilevanti per la predizione dei biomarcatori clinici \cite{NCBI_DCE_MRI, Kuhl1999}. \\
+In termini fisici, le immagini T1-weighted sono più sensibili alle variazioni del tempo di rilassamento longitudinale dei tessuti e risultano particolarmente informative dopo la somministrazione del mezzo di contrasto, poiché consentono di evidenziare variazioni di perfusione e permeabilità vascolare.\\
+Le immagini T2-weighted, sensibili al rilassamento trasversale, forniscono invece informazioni complementari sulla composizione del tessuto, mettendo in evidenza aree a elevato contenuto idrico, spesso associate a eterogeneità intralesionale \cite{DalProtoneRM}.
+
+\begin{itemize}
+    \item \textbf{Maschere di segmentazione}:  
+    annotate manualmente da radiologi esperti, fornite in formato DICOM.
+
+    \item \textbf{Dati clinico-patologici}:  
+    età, tipo istologico della lesione, grado, stato dei recettori ER/PR/HER2 e indice 
+    proliferativo Ki-67.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\noindent 
+La struttura estremamente articolata del dataset permette di integrare informazioni quantitative e qualitative, rendendolo particolarmente adatto per studi di predizione basati su Machine Learning. La Tabella 1 riassume le caratteristiche e gli elementi principali contenuti nel dataset.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{p{4cm} p{9cm}}
+\toprule
+\textbf{Categoria} & \textbf{Contenuto} \\
+\midrule
+Numero pazienti & 200 (82 dopo filtraggio e pulizia) \\
+Unità di analisi & Lesione (una o più per paziente) \\
+Dati radiologici & T2-weighted, DCE-MRI (1 pre + 4 post contrasto) \\
+Segmentazioni & Manuale, preprocessata, MedSAM (formato ROI) \\
+Dati patologici & ER, PR, HER2, Ki-67, tipo istologico, grado, isTN \\
+Formato dati & Digital Imaging and Communications in Medicine (DICOM) per immagini, Comma-Separated Values (CSV) per metadati clinici \\
+Origine & University of Wisconsin--Madison, TCIA repository \\
+\bottomrule
+\end{tabular}
+\caption{Riepilogo dei contenuti del dataset Advanced MRI Breast Lesions.}
+\label{tab:dataset_summary}
+\end{table}
+
+\vspace{0.4cm}
+\noindent Per consentire l'estrazione delle feature radiomiche e dinamiche, è necessario definire in maniera precisa l'area dell'immagine da analizzare. A partire dal dataset descritto, un ruolo centrale nello studio è svolto dalla definizione della Region of Interest (ROI).\\
+I dati associati al dataset AMBL sono organizzati in più file paralleli, ciascuno è relativo ad una diversa modalità di segmentazione della lesione.\\
+Tutti i file hanno la medesima struttura, lo stesso numero di pazienti (164) e gli stessi identificativi dei pazienti e si vanno a differire esclusivamente per la differenza della ROI utilizzata per l'estrazione delle feature.\\
+La definizione accurata della Region of Interest è cruciale poiché tutte le feature radiomiche e dinamiche sono calcolate esclusivamente sui voxel appartenenti alla ROI. Di conseguenza la qualità e la coerenza della segmentazione influenzano direttamente l’informatività delle feature e le prestazioni dei modelli predittivi \cite{Lambin2012, MorcaldiTesi}.
+
+
+\subsection{Duke Breast MRI dataset}
+Il Duke Breast MRI dataset è stato utilizzato come dataset indipendente, aveva lo scopo di verificare se i modelli di Machine Learning sviluppati sul dataset AMBL andassero a mantenere buone prestazioni su dati provenienti da un conteso clinico differente.\\
+In aggiunta al dataset Advanced MRI Breast Lesions, per questo studio è stato usato anche un ulteriore dataset clinico indipendente, utilizzato con la medesima impostazione
+adottata per il dataset AMBL. Questo è servito per andare a osservare la robustezza e la generalizzabilità dei modelli predittivi sviluppati. \\
+Il dataset Duke è stato raccolto presso la Duke University  nell'ambito degli studi clinici sull’imaging mammario mediante risonanza magnetica e successivamente andando ad usare differenti lavori di Machine Learning e di radiomica applicati al tumore al seno \cite{dukeMRI, pineda2019radiomics}.\\
+Come l'Advanced MRI Breast Lesions anche il dataset Duke include immagini di risonanza magnetica multiparametrica (T2-weighted e sequenze DCE-MRI), maschere di segmentazione e informazioni clinico-patologiche derivate da esami istologici, comprendenti lo stato dei recettori ER, PR, HER2 e l’indice proliferativo Ki-67 \cite{pineda2019radiomics}. Dal momento che i due dataset presentano una struttura dei dati e una tipologia di informazioni cliniche e radiologiche analoghe, è stato possibile applicare la stessa pipeline di preprocessing, estrazione delle feature e addestramento/validazione dei modelli di Machine Learning, garantendo coerenza metodologica tra le analisi condotte sui due gruppi di pazienti.\\
+È importante andare a sottolineare che il dataset Duke corrisponde ad un gruppo differente  rispetto al dataset AMBL. Raccolto in un differente contesto clinico e potenzialmente caratterizzato da una diversa distribuzione dei biomarcatori e delle caratteristiche radiologiche, come evidenziato in precedenti studi comparativi \cite{li2020multisite}.\\
+Per questa ragione i due dataset sono stati mantenuti separati per l'intera pipeline di analisi, andando ad evitare qualsiasi forma di fusione o contaminazione dei dati.
+L’adozione di due dataset clinici indipendenti consente di valutare l’impatto delle differenze tra i gruppi di pazienti sulle prestazioni dei modelli predittivi e di fornire una stima più realistica e affidabile della capacità di generalizzazione degli approcci di Machine Learning
+proposti.
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{p{4cm} p{9cm}}
+\toprule
+\textbf{Categoria} & \textbf{Contenuto} \\
+\midrule
+Numero pazienti & Gruppo di pazienti indipendente (numero variabile dopo filtraggio) \\
+Unitá di analisi & Lesione (una o più per paziente) \\
+Dati radiologici & T2-weighted, DCE-MRI (fase pre-contrasto e fasi post-contrasto) \\
+Segmentazioni & Manuali e generate automaticamente con MedSAM (formato ROI) \\
+Dati patologici & ER, PR, HER2, Ki-67 \\
+Formato dati & Digital Imaging and Communications in Medicine (DICOM) per le immagini, Comma-Separated Values (CSV) per i metadati clinici \\
+Origine & Duke University \cite{pineda2019radiomics, li2020multisite} \\
+\bottomrule
+\end{tabular}
+\caption{Riepilogo dei contenuti del Duke Breast MRI dataset.}
+\label{tab:duke_dataset_summary}
+\end{table}
+
+\noindent Il numero di pazienti riportato come variabile è dovuto esclusivamente alla completezza delle informazioni clinico-patologiche utilizzate come variabili target. In particolare, sono state considerate solo le lesioni per cui tutti i biomarcatori risultavano disponibili. I casi con etichette mancanti sono stati esclusi automaticamente durante la fase di preprocessing. \\
+È importante evidenziare che il Duke Breast MRI dataset include esclusivamente lesioni maligne; pertanto, a differenza di AMBL, non sono stati applicati filtri legati alla benignità/malignità, mentre la preparazione dei dati si è limitata alla standardizzazione delle variabili cliniche e all’esclusione dei casi con target mancanti.\\
+I modelli di Machine Learning sono stati addestrati e validati separatamente su ciascun dataset (AMBL e Duke) senza alcuna forma di trasferimento dei parametri o di addestramento congiunto, questo per andare a garantire una valutazione indipendente delle prestazioni e delle capacità di generalizzazione.
+
+
+
+
+\subsection{Segmentazioni originali, pre-processate e generate con medSAM}
+Le diverse tipologie di segmentazioni descritte di seguito sono state utilizzate su entrambi i dataset (AMBL e Duke) così da poter andare a confrontare in maniera corretta l'effetto della segmentazione sull'estrazione delle feature e sulle prestazioni dei modelli.\\
+Nel presente studio sono state usate tre differenti tipologie di segmentazione delle lesioni mammarie. 
+\begin{enumerate}
+    \item le segmentazioni originali fornite dal dataset TCIA;
+    \item le segmentazioni pre-processate mediante una pipeline morfologica, secondo la metodologia descritta nella tesi di Morcaldi \cite{MorcaldiTesi};
+    \item le segmentazioni generate automaticamente tramite il modello MedSAM \cite{MedSAM}.
+\end{enumerate}
+
+
+% FRASE PER INTRODURRE L'IMMAGINI
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{6pt}
+
+\begin{tabular}{cc}
+\includegraphics[width=0.45\textwidth]{images/Risonanze/MEDSAM_ROI_1.png} &
+\includegraphics[width=0.45\textwidth]{images/Risonanze/MEDSAM_ROI_0.png} \\
+
+\includegraphics[width=0.45\textwidth]{images/Risonanze/ROI_1.png} &
+\includegraphics[width=0.45\textwidth]{images/Risonanze/ROI_0.png} \\
+\end{tabular}
+
+\caption{Esempi rappresentativi di slice MRI della mammella. Prima riga: Regione di interesse (ROI) segmentate automaticamente tramite MedSAM (caso 1 a sinistra, caso 2 a destra). Seconda riga: immagini MRI originali corrispondenti. Le immagini sono riportate nello stesso ordine per facilitare il confronto visivo.
+L’ordine delle immagini è scelto per evidenziare il confronto visivo tra le segmentazioni automatiche e le maschere originali.
+}
+\label{tab:roi_examples}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+\subsubsection*{Segmentazioni originali}
+Le segmentazioni originali sono fornite direttamente all'interno del dataset Advanced MRI Breast Lesions pubblicato su The Cancer Imaging Archive 
+(TCIA) \cite{daniels2024advanced, tcia}.\\
+Secondo la documentazione del dataset, le lesioni sono state inizialmente delimitate manualmente da un radiologo esperto su immagini T1 sottratte 
+(fase pre-contrasto meno fase post-contrasto), al fine di evidenziare le regioni caratterizzate da un maggiore incremento di segnale e accumulo del mezzo di contrasto. 
+Successivamente, al fine di ottenere una maschera volumetrica finale, è stata applicata una soglia di intensità al volume sottratto, mantenendo i voxel con 
+enhancement superiore a un valore empiricamente definito dai curatori del dataset \cite{daniels2024advanced}.\\
+Questa procedura consente di ottenere maschere coerenti con la dinamica del mezzo di contrasto, introducendo tuttavia una variabilità legata alla scelta della 
+soglia e all’esperienza dell’operatore.
+
+\subsubsection*{Segmentazioni pre-processate}
+Oltre alle maschere originali, sono state utilizzate segmentazioni pre-processate ottenute tramite una pipeline morfologica descritta nella tesi di Morcaldi 
+\cite{MorcaldiTesi}. 
+La pipeline prevede i seguenti passaggi:
+\begin{enumerate}
+    \item \textbf{Dilation:} applicazione di un’operazione di dilatazione binaria di un pixel, utile per compensare eventuali sottostime del contorno e 
+    chiudere piccoli gap nella maschera;
+    \item \textbf{Rimozione delle componenti connesse spurie:} identificazione delle componenti connesse 3D e rimozione di quelle con volume inferiore a 
+    una soglia empirica, secondo una strategia analoga a quella impiegata in LungQuant \cite{MorcaldiTesi};
+    \item \textbf{Riempimento delle cavità (hole filling):} chiusura automatica delle lacune interne per ottenere una ROI morfologicamente coerente e 
+    topologicamente compatta.
+\end{enumerate}
+Come riportato nella tesi di Morcaldi \cite{MorcaldiTesi}, questa sequenza di operazioni consente di ottenere segmentazioni più regolari rispetto a quelle originali.\\
+I parametri utilizzati nella pipeline di pre-processing, in particolare la soglia di volume
+per la rimozione delle componenti connesse spurie sono stati selezionati in modo empirico,
+sulla base delle dimensioni tipiche delle lesioni e con l’obiettivo di eliminare artefatti e
+frammentazioni non informative. Tale procedura è mirata a ridurre il rumore
+morfologico delle ROI e a rendere le segmentazioni più consistenti e stabili, migliorando
+l’affidabilità dell’estrazione delle feature radiomiche e dinamiche.
+
+\subsubsection*{Segmentazioni generate con MedSAM}
+La terza tipologia di segmentazione è stata ottenuta mediante MedSAM, un modello di segmentazione semi-automatico derivato dal framework Segment Anything 
+Model e adattato per immagini mediche \cite{MedSAM}. 
+Seguendo l’approccio descritto nella tesi di Morcaldi \cite{MorcaldiTesi}, per ciascuna lesione è stato calcolato il più piccolo bounding box tridimensionale 
+contenente la regione di interesse (ROI) originale.\\
+Il bounding box tridimensionale è stato utilizzato come riferimento geometrico
+per generare, per ciascuna slice del volume MRI, un prompt bidimensionale coerente,
+ottenuto proiettando il box 3D sulle singole immagini 2D \cite{MedSAM}.\\
+Dal momento che il modello opera su immagini bidimensionali, la segmentazione dei volumi MRI è stata eseguita mediante un approccio slice-by-slice, che prevede la proiezione 
+del bounding box sulle singole slice, la segmentazione 2D della ROI e la successiva ricombinazione delle slice segmentate in un unico volume tridimensionale. 
+Come riportato nella tesi di Morcaldi \cite{MorcaldiTesi}, i valori del coefficiente di Dice ottenuti rispetto alle maschere originali sono compresi tra 0.55 e 0.61, 
+evidenziando come le segmentazioni generate tramite MedSAM risultino generalmente più regolari e meno frammentate rispetto a quelle manuali.
+
+
+\subsection{Feature radiomiche e dinamiche}
+In questo studio è stata adottata la metodologia di estrazione delle feature proposta nella tesi di Morcaldi \cite{MorcaldiTesi}. L’obiettivo è quello di analizzare l’influenza della segmentazione delle lesioni sull’estrazione delle informazioni quantitative e sulle successive prestazioni di classificazione  e predizione dei biomarcatori clinici.\\
+Le feature sono state estratte a partire da tre differenti definizioni della Region of Interest (ROI):
+\begin{itemize}
+    \item le segmentazioni originali fornite dal dataset;
+    \item le segmentazioni sottoposte a una fase di pre-processing morfologico;
+    \item le segmentazioni generate automaticamente tramite il modello MedSAM.
+\end{itemize}
+\noindent Per ciascuna tipologia di segmentazione sono state estratte due famiglie di feature, feature radiomiche classiche e feature dinamiche. \\
+Le feature radiomiche sono state calcolate utilizzando il framework PyRadiomics \cite{vanGriethuysen2017pyradiomics} e comprendono descrittori morfologici, statistiche di primo ordine e feature di texture.\\
+In particolare, le feature di texture includono le principali famiglie definite in PyRadiomics,
+secondo la configurazione adottata nella tesi di Morcaldi \cite{MorcaldiTesi}:
+\begin{itemize}
+    \item Gray Level Co-occurrence Matrix (GLCM);
+    \item Gray Level Run Length Matrix (GLRLM);
+    \item Gray Level Size Zone Matrix (GLSZM);
+    \item Gray Level Dependence Matrix (GLDM);
+    \item Neighbouring Gray Tone Difference Matrix (NGTDM).
+\end{itemize}
+\noindent Il numero di feature radiomiche estratte per ciascuna ROI è dell’ordine
+di alcune centinaia, includendo descrittori di forma, intensità e texture.\\
+L’estrazione è stata eseguita su volumi di risonanza magnetica (MRI) ottenuti dall’integrazione delle informazioni multiparametriche, in particolare sulle immagini derivate dalla sottrazione tra le sequenze Dynamic Contrast-Enhanced MRI (DCE-MRI) post-contrasto e la fase pre-contrasto, oltre alla sequenza T2-pesata, come descritto in \cite{MorcaldiTesi}.\\
+Le feature dinamiche sono state invece ottenute mediante l’analisi delle curve cinetiche di intensità del segnale delle sequenze DCE-MRI. Per ciascun 
+istante temporale sono state calcolate misure statistiche (media, mediana e deviazione standard) sui voxel appartenenti alla ROI. Successivamente sono 
+state derivate feature basate sull’andamento temporale di tali misure, al fine di modellare la dinamica di assorbimento e rilascio del mezzo di contrasto all’interno della lesione.\\
+Tali descrittori trasformano informazioni visive complesse in variabili numeriche riproducibili, utilizzabili dai modelli di Machine Learning per la predizione dei biomarcatori clinici \cite{Gillies2016}.\\
+Data la limitata numerosità del dataset e l'elevato numero di feature estratte non sono state applicate tecniche avanzate di selezione delle feature, al fine di evitare un’eccessiva ottimizzazione sui dati di training e ridurre il rischio di overfitting.
+
+
+
+
+
+
+\subsection{Data Preprocessing} \label{sec-data-processing}
+Nel presente lavoro, con il termine data preprocessing si indicano le trasformazioni applicate ai dati numerici per renderli idonei all’addestramento dei modelli, mentre il data cleaning riguarda la correzione e la standardizzazione delle informazioni cliniche e delle etichette.\\
+Le operazioni di preprocessing e data cleaning descritte di seguito sono state applicate in modo
+identico e separato a ciascun dataset clinico (AMBL e Duke). Questo per garantire confrontabilità
+metodologica evitando qualsiasi contaminazione tra i gruppi di pazienti.\\
+Per andare a preparare i dati per l'addestramento e garantire la stabilità numerica degli algoritmi usati, sono state eseguite le seguenti trasformazioni all'interno della pipeline di training:
+
+\paragraph{Gestione dei valori mancanti}
+I biomarcatori clinici (ER, PR, HER2 e Ki-67), utilizzati come variabili target, non sono stati soggetti ad alcuna procedura di imputazione. 
+I campioni per i quali tali informazioni risultavano mancanti sono stati esclusi dall’analisi, al fine di evitare l’introduzione di etichette 
+artificiali e potenziali bias nel processo di apprendimento.\\
+Per quanto riguarda le feature numeriche estratte, il processo di preprocessing e di estrazione delle feature è stato progettato in modo da 
+minimizzare la presenza di valori mancanti. Per evitare qualsiasi forma di leakage, l’imputazione è stata eseguita all’interno della pipeline di training, stimando la media esclusivamente sui dati del training set di ciascun fold e applicandola poi al corrispondente test set \cite{scikit-learn}.\\
+Poiché i NaN erano rari e legati a feature non computabili in casi limite, l’impatto dell’imputazione sulle performance è atteso minimo.
+
+
+
+\paragraph{Feature scaling}
+Poiché la Regressione Logistica è sensibile alla scala delle variabili, per questo modello è stata applicata una normalizzazione tramite StandardScaler, una tecnica che trasforma ciascuna feature affinché abbia media zero e varianza unitaria \cite{scikit-learn}. 
+Questa scelta garantisce stabilità numerica durante l'ottimizzazione e favorisce la convergenza dell'algoritmo\cite{scikit-learn}.\\
+I modelli basati su alberi (Random Forest, XGBoost e HistGradientBoosting) non richiedono scaling delle feature, poiché le loro regole decisionali dipendono esclusivamente da
+soglie ordinali e risultano quindi invarianti rispetto a trasformazioni monotone delle variabili
+\cite{hastie2009elements, scikit-learn}.
+
+
+
+\paragraph{Struttura multi-output}
+Lo scopo dello studio è la predizione di quattro biomarcatori clinici distinti (ER, PR, HER2 e Ki-67), ciascuno formulato come un problema 
+di classificazione binaria indipendente. Al fine di gestire in modo coerente e compatto l’addestramento dei modelli, i classificatori sono stati
+implementati utilizzando il wrapper \texttt{MultiOutputClassifier}.\\
+Tale approccio consente di addestrare un modello separato per ciascun biomarcatore, mantenendo tuttavia una pipeline unificata per le fasi di 
+preprocessing, validazione e ottimizzazione degli iperparametri. È importante sottolineare che questa scelta non implica la modellazione di 
+relazioni di dipendenza tra i biomarcatori, ma rappresenta esclusivamente una soluzione metodologica per la gestione simultanea di più target 
+clinicamente indipendenti.
+
+
+
+
+
+
+\subsection{Data cleaning} \label{sec-data-cleaning}
+Prima di procedere con l'allenamento degli algoritmi, è stato necessario effettuare delle operazioni per uniformare e pulire i dati.
+Infatti, i dati grezzi presentavano numerose eterogeneità nella formattazione, derivanti dalle ambiguità del linguaggio medico, dai cambiamenti che necessariamente avvengono nel tempo nelle linee guida di refertazione e da possibili errori di gestione dei file che contengono queste informazioni. È stata, pertanto, sviluppata una funzione di pulizia dedicata per uniformare le variabili e gestire i valori mancanti o inconsistenti.
+
+
+\paragraph{Pre-processing del target Ki-67}
+All’interno del dataset originale, la variabile relativa all’indice di proliferazione Ki-67 presentava una codifica eterogenea. In particolare, 
+per alcune pazienti il valore era espresso in forma numerica continua o come intervallo percentuale (ad esempio “15 to 30”), mentre in altri casi 
+era riportato mediante categorie qualitative (ad esempio “low”, “intermediate”, “high”); in una minoranza di casi il dato risultava assente.\\
+Al fine di ottenere una rappresentazione numerica coerente e utilizzabile nei modelli di Machine Learning, la variabile Ki-67 è stata ricondotta a 
+una scala percentuale compresa tra 0 e 100, preservandone il significato quantitativo. Gli intervalli numerici sono stati rappresentati tramite il 
+loro valore medio, mentre le categorie qualitative sono state mappate su valori percentuali rappresentativi, coerenti con il loro significato clinico. 
+Nei casi di definizioni ibride (ad esempio “low to intermediate”), è stato utilizzato il valore medio dei corrispondenti riferimenti. I valori non 
+interpretabili o privi di un chiaro significato quantitativo sono stati convertiti in NaN e successivamente gestiti durante la fase di preprocessing.
+
+
+\paragraph{Standardizzazione dell’Immunohistochemistry (IHC) (ER, PR, HER2)}
+I dati di immunoistochimica erano riportati in sei formati differenti, spaziando da valori numerici a descrizioni testuali (es. "negative", "strong") o simboliche (es. "++"). È stato quindi applicato uno standard unificato su scala ordinale $0-3$, dove lo 0 indica negatività (assenza di proteine), 1 debolezza, 2 moderazione e 3 una forte espressione proteica \cite{Wolff2018}.
+
+
+\noindent Questa ricodifica su scala ordinale $0$--$3$ è stata utilizzata come passaggio intermedio per uniformare le etichette tra i diversi formati presenti nei dati.\\
+A partire da tale rappresentazione standardizzata è stato poi possibile (i) derivare in modo coerente variabili binarie come \textit{isTN} e (ii) applicare soglie cliniche per ottenere le etichette finali $0/1$ impiegate nei modelli di Machine Learning.
+
+\paragraph{Variabile Triple Negative (isTN)}
+Per la variabile binaria Triple Negative, è stata applicata una logica di imputazione specifica, basata sulla prevalenza epidemiologica. I valori mancanti (NaN) sono stati messi a 0 (negativo), assumendo che, trattandosi di una condizione presente solo nel $10-15\%$ dei casi \cite{Foulkes2010}, l'assenza di specificazioni indica con maggiore probabilità l'assenza della caratteristica. Ogni valore diverso da 1 è stato forzato a 0 per andare a garantire la binarietà delle features.\\
+Infine, una routine di validazione (\texttt{DataValidation}) è stata eseguita al termine
+della fase di pulizia per verificare la coerenza dei tipi di dato, l’unicità delle osservazioni e la completezza dei dataset finali salvati.\\
+A seguito della fase di pulizia, filtraggio e integrazione delle informazioni cliniche(Sezione~\ref{sec-data-cleaning}), per il dataset AMBL sono stati inclusi 82 pazienti con
+le relative lesioni annotate, che costituiscono il set finale utilizzato per
+l’addestramento e la validazione dei modelli predittivi su tale dataset.
+
+
+
+% ex Standardizzazione dei Target
+\paragraph{Binarizzazione dei biomarcatori clinici}
+I biomarcatori ER, PR, HER2 e Ki-67 sono stati valutati tramite analisi immunoistochimica (IHC), 
+che fornisce una misura semi-quantitativa dell’espressione proteica mediante score clinici standardizzati. 
+Al fine di formulare il problema come un task di classificazione binaria, coerente con gli algoritmi di Machine Learning utilizzati, 
+tali biomarcatori sono stati ricodificati in etichette binarie (0/1) applicando soglie cliniche comunemente adottate nella letteratura 
+oncologica e nelle linee guida internazionali, in particolare nel consenso di St. Gallen \cite{Goldhirsch2013}.\\
+Per i recettori ormonali ER e PR, lo score IHC discrimina tra assenza ed espressione del recettore. In accordo con la pratica clinica, 
+tutti i casi con espressione presente, indipendentemente dall’intensità (score $>0$), sono stati considerati positivi (1), mentre i 
+casi senza espressione sono stati etichettati come negativi (0).\\
+Per il biomarcatore HER2, valutato mediante score IHC su scala discreta da 0 a 3+, solo i casi con score 3+ indicano una sovraespressione 
+certa del recettore. Di conseguenza, sono stati classificati come positivi (1) esclusivamente i campioni con score $\geq 3$, mentre i
+restanti sono stati considerati negativi (0).\\
+Il biomarcatore Ki-67, espresso come percentuale di cellule tumorali proliferanti, è stato binarizzato adottando la soglia clinica del 20\%, 
+comunemente utilizzata per distinguere tumori a bassa e alta proliferazione cellulare. I campioni con valore di Ki-67 $\geq 20\%$ sono stati 
+classificati come ad alta proliferazione (1), mentre quelli con valore inferiore come a bassa proliferazione (0).\\
+Le seguenti soglie riflettono la pratica clinica corrente e consentono di mantenere coerenza tra l'informazione istopatologica e la formulazione del problema di Machine Learning.
+
+
+
+\section{Modelli e Strategia di addestramento} \label{sec-Mod&Add}
+In questa sezione vengono descritte le strutture algoritmiche selezionate e la metodologia adottata per il loro addestramento e la validazione.
+
+\subsection{Algoritmi di classificazione}
+Per affrontare il problema della predizione dei biomarcatori clinici (ER, PR, HER2 e Ki-67) formulata come classificazione binaria, sono stati selezionati quattro modelli di apprendimento supervisionato.
+
+\paragraph{Random Forest}
+Il modello Random Forest è un modello ensemble basato su bagging (Bootstrap Aggregating), il quale va a costruire un grande numero di alberi decisionali durante il training e restituisce la classe che è la moda delle classi sui singoli alberi \cite{scikit-learn}. Questa tecnica riduce significativamente la varianza rispetto ad un singolo albero decisionale, andando a ridurre il rischio di overfitting, caratteristica cruciale dato il numero limitato di pazienti.
+
+\paragraph{Gradient Boosting}
+Sono stati implementati due algoritmi basati sul boosting, l'XGBoost e l'HistGradientBoosting. Il boosting è una tecnica che costruisce il modello in maniera induttiva, in cui ogni nuovo albero va a correggere un errore dell'albero precedente. Per implementare i due algoritmi sono state utilizzate le seguenti librerie:
+\begin{itemize}
+    \item \textbf{HistGradientBoosting}: un'implementazione di scikit-learn ottimizzata che utilizza il binning dei dati per ottimizzare l'allenamento \cite{scikit-learn}
+    \item  \textbf{XGBoost}: una libreria scalabile che integra la regolarizzazione avanzata (L1/L2) per controllare la complessità del modello e prevenire l'overfitting \cite{xgboost_github}.
+\end{itemize}
+
+\paragraph{Regressione Logistica}
+È un modello probabilistico che va a stimare la probabilità di appartenenza di una classe applicando una funzione logistica e una combinazione lineare delle feature \cite{scikit-learn}. All'interno della pipeline multi-output, la Regressione Logistica é stata integrata con uno StandardScaler \cite{scikit-learn} per garantire la stabilità numerica del solver \textit{liblinear} (è un algoritmo di ottimizzazione per la regressione logistica) e migliorare la convergenza durante l'addestramento \cite{scikit-learn}.
+
+
+
+
+\subsection{Strategia di validazione}
+Data la struttura del dataset, che include scansioni multiple e lesioni diverse per lo stesso paziente, l'applicazione della divisione casuale (random split) avrebbe potuto causare data leaking, ovvero la presenza dei dati dello stesso paziente sia nel training che nel test set. Per garantire una stima corretta della performance, è stata adottata una strategia di Group K-Fold Cross-Validation (GKF) \cite{scikit-learn}, impostata tipicamente con $k=5$ e adattata a $k=3$ nei casi in cui la numerosità della classe positiva risultava troppo ridotta per garantire la presenza di entrambe le classi in ogni fold. Questo metodo vincola lo split in modo che tutti i campioni associati allo stesso PatientID siano confinati in una singola fold, andando a simulare accuratamente la capacità del modello di generalizzazione su nuovi pazienti mai visti.\\
+Per ogni fold vengono inoltre generati report separati contenenti F1-score, AUC e Accuracy per ciascuno dei quattro target. Questi risultati vengono salvati individualmente e successivamente utilizzati nella fase di aggregazione dei risultati finali.\\
+Nei casi in cui la classe positiva risultava particolarmente rara, il numero di fold è stato ridotto a $k=3$
+per evitare la creazione di fold prive di esempi positivi e rendere più stabile la stima delle metriche \cite{japkowicz2002, he2009learning}.\\
+
+
+\subsection{Ricerca degli iperparametri}
+Per ciascun algoritmo è stata eseguita un'ottimizzazione degli iperparametri tramite la tecnica della Grid Search, che si basa sull'esplorare combinazioni di parametri definiti a priori. La selezione del miglior modello è stata guidata dalla massimizzazione della metrica "F1-score (Macro Average)", ritenuta la più appropriata per bilanciare la Precision e la Recall in un contesto multi-output con target binari. In Tabella \ref{tab_hyper} sono riportati i valori degli iperparametri testati per ogni modello. Poiché il dataset disponibile contiene soltanto 82 pazienti, la scelta di esplorare spazi iperparametrici molto compatti è stata intenzionale. Infatti, griglie troppo ampie avrebbero aumentato il rischio di overfitting sulla cross-validation e aumentato la varianza del modello. Sono quindi stati selezionati soltanto pochi valori ragionevoli per ogni iperparametro, privilegiando modelli semplici e stabili. Inoltre, la definizione di una grid minimale garantisce coerenza con la pipeline multi-output e consente di mantenere tempi di addestramento contenuti durante l'esecuzione della Group K-Fold, permettendo la generazione di report per fold e la successiva aggregazione dei risultati.
+
+% Impostare le tabelle
+\begin{table}[htbp]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{6pt}
+
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+\toprule
+\textbf{Modello} & \textbf{Spazio di ricerca degli iperparametri} \\
+\midrule
+
+\textbf{Random Forest} &
+n\_estimators $\in \{50, 75, 100\}$;\\
+& max\_depth $\in \{2, 4, 6\}$;\\
+& min\_samples\_leaf $\in \{1, 2, 3\}$ \\
+\addlinespace[4pt]
+
+\textbf{HistGradientBoosting} &
+learning\_rate $\in \{0.05, 0.1, 1.0\}$;\\
+& max\_iter $\in \{100, 200\}$;\\
+& max\_depth $\in \{3, 5\}$ \\
+\addlinespace[4pt]
+
+\textbf{Regressione Logistica} &
+C $\in \{0.1, 1.0\}$;\\
+& penalty = l2 (fissa) \\
+\addlinespace[4pt]
+
+\textbf{XGBoost} &
+n\_estimators $\in \{50, 75, 100\}$;\\
+& max\_depth $\in \{2, 3, 4\}$;\\
+& learning\_rate $\in \{0.05, 0.1, 1.0\}$ \\
+\bottomrule
+\end{tabularx}
+
+\caption{Spazio di ricerca degli iperparametri utilizzato nei quattro modelli di classificazione.}
+\label{tab_hyper}
+\end{table}

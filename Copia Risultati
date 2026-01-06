@@ -1,0 +1,257 @@
+\chapter{Risultati}
+Il seguente capitolo riporta i risultati sperimentali ottenuti dall'applicazione di diversi modelli di Machine Learning (Random Forest, Gradient Boosting e Regressione Logistica) per la predizione dei biomarcatori clinici ER, PR, HER2 e Ki-67. I modelli sono stati addestrati utilizzando feature radiomiche e dinamiche estratte da immagini di risonanza magnetica mammaria DCE-MRI.\\
+I test sono stati effettuati su diversi dataset e configurazioni di segmentazione al fine di confrontare in modo oggettivo le prestazioni dei modelli di classificazione. I risultati vengono presentati in forma comparativa utilizzando metriche di valutazione adeguate a contesti caratterizzati da possibile sbilanciamento delle classi.
+
+
+\section{Descrizione degli esperimenti}
+I test condotti in questo studio hanno lo scopo di andare a valutare dei diversi modelli di Machine Learning supervisionato nella predizione dei biomarcatori clinici. Partendo da feature quantitative estratte da immagini di risonanza magnetica mammaria con mezzo di contrasto dinamico (DCE-MRI) \cite{bishop2006pattern, hastie2009elements}.\\
+Sono stati considerati tre modelli di classificazione appartenenti a differenti famiglie algoritmiche: Random Forest, modelli ad albero basati su boosting (Boosted Decision Trees), tra cui Gradient Boosting
+e XGBoost, e Regressione Logistica \cite{Aerts2014Radiomics, Lambin2012}. Tali metodi sono stati applicati a differenti dataset derivati dallo stesso insieme di pazienti, questo per andare a valutare l’effetto delle differenti rappresentazioni dell’informazione radiologica sulle prestazioni di classificazione.\\
+Per entrambi i dataset sono state analizzate due tipologie principali di feature. Le feature radiomiche estratte dalle immagini statiche mediante procedure standardizzate \cite{Aerts2014Radiomics, Gillies2016}
+e feature dinamiche, le quali sono derivate dall'andamento temporale del segnale nelle sequenze DCE-MRI \cite{Pinker2018DCEMRI, Mann2019MRIbreast}.\\
+Le due tipologie di feature sono state analizzate separatamente in maniera tale da ottenere un'analisi distinta.\\
+Le prestazioni dei vari modelli sono state analizzate mediante una validazione incrociata con suddivisione per paziente, in maniera tale da non avere i dati di una paziente sia nella fase di addestramento che nella fase di valutazione. Inoltre questa scelta consente di diminuire il rischio di data leakage e di fornire una valutazione più realistica delle capacità di generalizzazione dei modelli
+\cite{Varma2006Bias, Varoquaux2018MLClinical}.\\
+Per ogni tipo di biomarcatore i modelli sono stati addestrati e valutati in modo indipendente andando a formulare il problema come una serie di task di classificazione binaria. I risultati ottenuti sono riportati nelle sezioni successive.\\
+In questa sezione vengono riportati esclusivamente i risultati ottenuti, senza fornire interpretazioni cliniche o metodologiche, che saranno discusse nei capitoli successivi.
+
+
+\section{Distribuzione dei biomarcatori nei dataset}
+Prima di andare ad analizzare le prestazioni dei vari modelli di Machine Learning, è stata esaminata la distribuzione delle varie classi dei biomarcatori considerati. Tale analisi fornisce un corretto contesto interpretativo ai risultati di classificazione, in particolare in presenza di possibili sbilanciamenti tra le classi.\\
+Per il dataset AMBL, sono state considerate le distribuzioni originali dei biomarcatori clinici non ancora sottoposte a binarizzazione. La Figura~\ref{fig:biomarker_distribution_ambl} riporta la distribuzione delle classi per ER, PR, HER2 e Ki-67, espressa in termini di frequenze assolute e percentuali.
+
+
+% TODO: devo rivedere il posizionamento, non si legge na sega cazzo
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.49\textwidth]{images/Grafici/DistrubuzioneBiomarcatori/ER_SII_distribuzione.png}
+    \includegraphics[width=0.49\textwidth]
+    {images/Grafici/DistrubuzioneBiomarcatori/PR_SII_distribuzione.png}
+
+    \vspace{0.3cm}
+
+    \includegraphics[width=0.49\textwidth]{images/Grafici/DistrubuzioneBiomarcatori/HER2_SII_distribuzione.png}
+    \includegraphics[width=0.49\textwidth]{images/Grafici/DistrubuzioneBiomarcatori/KI67_distribuzione.png}
+
+    \caption{Distribuzione delle classi per i biomarcatori clinici ER, PR,
+    HER2 e Ki-67 nel dataset AMBL, considerando i valori originali prima
+    della binarizzazione.}
+    \label{fig:biomarker_distribution_ambl}
+\end{figure}
+
+
+\noindent Dall'analisi dei grafici si osserva uno sbilanciamento nella distribuzione dei biomarcatori analizzati. In particolare, i biomarcatori ER e PR presentano una distribuzione relativamente più equilibrata tra le classi rispetto agli altri target considerati. Il biomarcatore HER2 mostra invece una marcata prevalenza della classe negativa.\\
+Questo aspetto è rilevante poiché lo sbilanciamento tra le classi può influenzare le prestazioni dei modelli di classificazione, rendendo alcune metriche meno informative rispetto ad altre.
+
+
+\noindent Per quanto riguarda il secondo dataset, ovvero il Duke, i biomarcatori clinici risultano
+già forniti in forma binarizzata, per questa ragione non è stata fatta una rappresentazione grafica dell'
+andamento delle classi in quanto la rappresentazione grafica non fornirebbe ulteriori informazioni.\\
+La distribuzione delle classi nel dataset DUKE risulta però più equilibrata per ER e PR, mentre permane uno sbilanciamento per il biomarcatore HER2, sebbene meno marcato rispetto al dataset AMBL.
+
+
+\section{Metriche di valutazione}\label{sec-met-valu}
+Le prestazioni dei modelli di Machine Learning usati sono stati valutati mediante delle metriche di classificazioni. Questo sistema di valutazione è servito per andare a fornire una valutazione robusta e completa, per il comportamento predittivo dei vari modelli. Sono state usate le seguenti metriche di valutazione:
+\begin{itemize}
+    \item \textbf{Accuracy}, misura la proporzione di predizioni
+    corrette rispetto al numero totale di campioni;
+    \item \textbf{F1-score}, rappresenta una media armonica tra
+    precision e recall ed è particolarmente informativa in presenza di
+    classi sbilanciate;
+    \item \textbf{AUC-ROC}, valuta la capacità del modello di
+    discriminare tra le classi al variare della soglia di decisione;
+\end{itemize}
+\noindent L'uso accoppiato di più metriche consente di andare ad ottenere una valutazione più affidabile delle varie predizioni dei modelli andando ad evitare che il giudizio sia influenzato da una singola misura, in particolare in presenza di distribuzioni delle classi non uniformi.\\
+Nel confronto tra i modelli l'analisi delle prestazioni è stata condotta principalemente facendo riferimetno al F1-score, questo perchè tale metrica è più adatta a contesti caratterizzati da sbilancimanti delle classi.
+
+
+
+
+ \section{Risultati di classificazione basati su feature radiomiche}
+In questa sezione vengono riportati i risultati di classificazione andando ad utilizzare esclusivamente le feature radiomiche, analizzati per ogni singolo biomarcatore in maniera indipendente.\\
+Le prestazioni vengono mostrate in formato tabellare, andando ad utilizzare le metriche 
+descritte nella Sezione~\ref{sec-met-valu}. 
+\subsection{Dataset DUKE – Segmentazioni MedSAM}
+\subsubsection{Recettore Estrogenico (ER)}
+Dalla Tabella~\ref{tab:ER_radiomics} si osserva che i modelli basati su alberi decisionali mostrano valori medi di F1-score e AUC-ROC comparabili o leggermente superiori rispetto alla Regressione Logistica. Complessivamente i risultati risultano stabili tra i diversi modelli usati, con una buona capacità di discriminazione tra le classi. 
+
+\begin{table}[H]
+\centering
+\caption{Prestazioni di classificazione basate su feature radiomiche per
+il biomarcatore ER (dataset DUKE).}
+\label{tab:ER_radiomics}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Modello} & \textbf{Accuracy} & \textbf{F1-score} & \textbf{AUC-ROC} \\
+\midrule
+Random Forest        & 0.553 $\pm$ 0.036 & 0.639 $\pm$ 0.038 & 0.515 $\pm$ 0.053 \\
+Gradient Boosting    & 0.543 $\pm$ 0.074 & 0.605 $\pm$ 0.064 & 0.532 $\pm$ 0.083 \\
+XGBoost              & 0.557 $\pm$ 0.052 & 0.625 $\pm$ 0.028 & 0.528 $\pm$ 0.094 \\
+Regressione Logistica& 0.522 $\pm$ 0.024 & 0.608 $\pm$ 0.018 & 0.519 $\pm$ 0.049 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Recettore Progesteronico (PR)}
+La seguente Tabella~\ref{tab:PR_radiomics} riporta i risultati ottenuti dall'addestramento dei modelli sul biomarcatore del progesterone.\\
+Analogamente a quanto osservato per ER, i modelli tendono ad ottenere risultati migliori rispetto alla Regressione Logistica, soprattutto in termini di metriche sensibili allo sbilanciamento delle
+classi.
+
+\begin{table}[H]
+\centering
+\caption{Prestazioni di classificazione basate su feature radiomiche per
+il biomarcatore PR (dataset DUKE).}
+\label{tab:PR_radiomics}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Modello} & \textbf{Accuracy} & \textbf{F1-score} & \textbf{AUC-ROC} \\
+\midrule
+Random Forest        & 0.509 $\pm$ 0.046 & 0.444 $\pm$ 0.078 & 0.485 $\pm$ 0.026 \\
+Gradient Boosting    & 0.502 $\pm$ 0.057 & 0.441 $\pm$ 0.043 & 0.500 $\pm$ 0.076 \\
+XGBoost              & 0.495 $\pm$ 0.057 & 0.466 $\pm$ 0.035 & 0.506 $\pm$ 0.076 \\
+Regressione Logistica& 0.501 $\pm$ 0.060 & 0.456 $\pm$ 0.036 & 0.505 $\pm$ 0.038 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+
+
+
+\subsubsection{Human Epidermal growth factor Receptor 2 (HER2)}
+La seguente Tabella~\ref{tab:HER2_radiomics} riporta i risultati ottenuti dall'addestramento dei modelli sul biomarcatore del Human Epidermal growth factor Receptor 2.\\
+A differenza di PR e ER, le prestazioni dei modelli risultano abbastanza inferiori e caratterizzate da una maggiore variabilità tra le metriche considerate. Si può osservare valori di una F1-score più contenuti e valori della AUC-ROC moderati, vanno ad indicare una capacità discriminativa limitata nella predizione dello stato di HER2.
+
+\begin{table}[H]
+\centering
+\caption{Prestazioni di classificazione basate su feature radiomiche per
+il biomarcatore HER2 (dataset DUKE).}
+\label{tab:HER2_radiomics}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Modello} & \textbf{Accuracy} & \textbf{F1-score} & \textbf{AUC-ROC} \\
+\midrule
+Random Forest        & 0.539 $\pm$ 0.057 & 0.331 $\pm$ 0.086 & 0.463 $\pm$ 0.026 \\
+Gradient Boosting    & 0.615 $\pm$ 0.057 & 0.217 $\pm$ 0.075 & 0.437 $\pm$ 0.024 \\
+XGBoost              & 0.632 $\pm$ 0.069 & 0.221 $\pm$ 0.152 & 0.468 $\pm$ 0.114 \\
+Regressione Logistica& 0.577 $\pm$ 0.038 & 0.369 $\pm$ 0.055 & 0.544 $\pm$ 0.031 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Dataset DUKE – Segmentazioni originali}
+\subsubsection{Recettore Estrogeno (ER)}
+La Tabella~\ref{tab:ER_orig} riporta i risultati di classificazione per il
+biomarcatore ER ottenuti utilizzando feature radiomiche estratte da
+segmentazioni originali del dataset DUKE
+\begin{table}[H]
+\centering
+\caption{Prestazioni di classificazione basate su feature radiomiche
+(segmentazioni originali) per il biomarcatore ER (dataset DUKE).}
+\label{tab:ER_orig}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Modello} & \textbf{Accuracy} & \textbf{F1-score} & \textbf{AUC-ROC} \\
+\midrule
+Boosted Decision Tree & 0.529 $\pm$ 0.065 & 0.610 $\pm$ 0.053 & 0.540 $\pm$ 0.113 \\
+Random Forest & 0.546 $\pm$ 0.070 & 0.630 $\pm$ 0.053 & 0.530 $\pm$ 0.100 \\
+Regressione Logistica & 0.553 $\pm$ 0.034 & 0.642 $\pm$ 0.033 & 0.528 $\pm$ 0.069 \\
+XGBoost & 0.567 $\pm$ 0.069 & 0.639 $\pm$ 0.060 & 0.549 $\pm$ 0.082 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Recettore Progesteronico (PR)}
+La Tabella~\ref{tab:PR_orig} mostra le prestazioni ottenute nella
+predizione del biomarcatore PR utilizzando segmentazioni originali.
+I risultati evidenziano prestazioni complessivamente moderate, con
+valori di AUC-ROC simili tra i modelli analizzati. In questo caso,
+Random Forest presenta il valore medio di AUC-ROC più alto.
+\begin{table}[H]
+\centering
+\caption{Prestazioni di classificazione basate su feature radiomiche
+(segmentazioni originali) per il biomarcatore PR (dataset DUKE).}
+\label{tab:PR_orig}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Modello} & \textbf{Accuracy} & \textbf{F1-score} & \textbf{AUC-ROC} \\
+\midrule
+Boosted Decision Tree & 0.529 $\pm$ 0.035 & 0.480 $\pm$ 0.027 & 0.507 $\pm$ 0.030 \\
+Random Forest & 0.550 $\pm$ 0.049 & 0.483 $\pm$ 0.011 & 0.539 $\pm$ 0.060 \\
+Regressione Logistica & 0.515 $\pm$ 0.059 & 0.499 $\pm$ 0.044 & 0.513 $\pm$ 0.067 \\
+XGBoost & 0.519 $\pm$ 0.041 & 0.412 $\pm$ 0.066 & 0.512 $\pm$ 0.059 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Human Epidermal growth factor Receptor 2 (HER2)}
+La Tabella~\ref{tab:HER2_orig} riporta i risultati relativi alla classificazione del biomarcatore HER2 basata su feature radiomiche estratte da segmentazioni originali. Le prestazioni risultano
+generalmente inferiori rispetto a quelle osservate per ER e PR, con valori di F1-score contenuti e AUC-ROC moderati. Tra i modelli considerati, la Regressione Logistica mostra il valore medio di AUC-ROC più elevato.
+\begin{table}[H]
+\centering
+\caption{Prestazioni di classificazione basate su feature radiomiche
+(segmentazioni originali) per il biomarcatore HER2 (dataset DUKE).}
+\label{tab:HER2_orig}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Modello} & \textbf{Accuracy} & \textbf{F1-score} & \textbf{AUC-ROC} \\
+\midrule
+Boosted Decision Tree & 0.612 $\pm$ 0.016 & 0.217 $\pm$ 0.047 & 0.409 $\pm$ 0.059 \\
+Random Forest & 0.615 $\pm$ 0.033 & 0.171 $\pm$ 0.086 & 0.454 $\pm$ 0.057 \\
+Regressione Logistica & 0.560 $\pm$ 0.057 & 0.349 $\pm$ 0.056 & 0.532 $\pm$ 0.033 \\
+XGBoost & 0.660 $\pm$ 0.026 & 0.119 $\pm$ 0.052 & 0.431 $\pm$ 0.064 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+
+
+
+\subsection{Ki-67}
+Il biomarcatore Ki-67 non è disponibile nel dataset DUKE utilizzato in questa fase dello studio. Di conseguenza, non è stato possibile addestrare e valutare modelli di classificazione per la predizione di Ki-67 su tale dataset.
+
+
+
+\section{Confronto tra modelli}
+In questa sezione vengono confrontate le diverse famiglie di algoritmi di Machine Learning considerate nello studio. Questo confronto serve per andare a verificare quale tipologia di approccio risulta più efficace nella predizione dei biomarcatori clinici utilizzati.
+Il confronto è stato condotto sulle prestazioni in termini di AUC-ROC ottenute dai modelli Random Forest, Boosted Decision Trees (Gradient Boosting e XGBoost) e Regressione Logistica sui biomarcatori andando ad utilizzare le feature radiomiche estratte sia da segmentazioni MedSAM sia da segmentazioni originali del dataset Duke.\\
+
+\noindent La Tabella~\ref{tab:modello_comparato} riassume le prestazioni medie derivate dai modelli utilizzati sui diversi biomarcatori, questo consente di andare a fare un confronto diretto tra le diverse famiglie di algoritmi.
+
+\begin{table}[H]
+\centering
+\caption{Confronto tra le prestazioni medie (AUC-ROC) dei diversi modelli
+sui biomarcatori ER, PR e HER2, calcolate come media delle AUC ottenute
+per ciascun biomarcatore (dataset DUKE).}
+\label{tab:modello_comparato}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Modello} & \textbf{MedSAM} & \textbf{Originali} \\
+\midrule
+Boosted Decision Tree & 0.490 & 0.485 \\
+Random Forest         & 0.488 & 0.508 \\
+Regressione Logistica & 0.523 & 0.524 \\
+XGBoost               & 0.501 & 0.497 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent I valori riportati nella Tabella~\ref{tab:modello_comparato} sono stati ricavati andando a calcolare per ciascun modello a media delle AUC-ROC relative ai biomarcatori ER, PR e HER2, a partire dai risultati di classificazione presentati nelle sezioni precedenti.\\
+
+\noindent La Figura~\ref{fig:boxplot_models} fornisce una rappresentazione grafica della Tabella~\ref{tab:modello_comparato}. Mostra la distribuzione dei valori di AUC-ROC sui diversi biomarcatori
+
+% Immagine del boxPlot
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/Grafici/BoxPlot/boxplot_auc_duke_radiomic_vs_duke.png}
+    \caption{Distribuzione dei valori di AUC-ROC per i diversi modelli di
+    classificazione sui biomarcatori analizzati.}
+    \label{fig:boxplot_models}
+\end{figure}
+
+
+\noindent Nel complesso, le prestazioni dei modelli ensemble basati su alberi decisionali e della Regressione Logistica risultano comparabili, con differenze che variano in funzione del biomarcatore considerato e della tipologia di segmentazione utilizzata. Non emerge un modello universalmente dominante per tutti i biomarcatori analizzati.
