@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import sys
 from pathlib import Path
-import re
+
 
 from colorama import Fore, init
 # Resetto il colore dopo ogni print
@@ -24,10 +24,6 @@ PATH_CLEANED_DATASET = DATASET_PATH / 'cleaned'
 
 # Lista dei CSV da pulire
 FILENAME = [
-    'ambl_lesions_radiomic_medsam.csv',
-    'duke_lesions_radiomic_medsam.csv',
-    'ambl_lesions.csv',
-    'duke_lesions.csv',
     'medsam_dynamic.csv',
     'original_dynamic.csv',
     'preprocessed_dynamic.csv',
@@ -54,28 +50,13 @@ colonne_da_rimuovere = [
     'TemporalResolution 2',
     'TemporalResolution 3',
     'TemporalResolution 4',
-    'TemporalResolution 5',            
+    'TemporalResolution 5',
+    'ER [%]',       
+    'PR [%]',       
+    'HER2 [%]',             
 ]
 
 
-def standardizzazione_percentuale(val):
-    """
-    Converte valori tipo: 80, '80', '80%', ' 80 % ' in float 0-100.
-    Gestisce -1, nan, none, '' -> NaN.
-    """
-    if pd.isna(val):
-        return np.nan
-
-    s = str(val).lower().strip()
-    if s in ['-1', '-1.0', '', 'nan', 'none']:
-        return np.nan
-
-    m = re.search(r'(\d+(\.\d+)?)', s)
-    if not m:
-        return np.nan
-
-    x = float(m.group(1))
-    return x if 0 <= x <= 100 else np.nan
 
 # **************************************
 #   Funzione per standardizzare il ki-67
@@ -290,47 +271,64 @@ def standardizzazione_IHC(val):
 # **************************************
 def clean_dataset(dataset):
     """
-    Rimuovo colonne inutili + standardizzo alcune colonne cliniche.
-    Mantengo e pulisco ER/PR/HER2 [%] se presenti.
+    Vado a rimuovere le colonne che non mi servono     
     """
+    dataset = dataset.drop(columns=[col for col in colonne_da_rimuovere if col in dataset.columns]) 
 
-    # Drop colonne non utili (NON droppare le % biomarker)
-    dataset = dataset.drop(columns=[col for col in colonne_da_rimuovere if col in dataset.columns])
+    # Vado a cancellare le righe che si riferiscono al tumore benigno, visto che mi interessa solo il maligno
+    dataset = dataset.drop(dataset[dataset["tumor/benign"]==0].index, axis=0)
 
-    # Filtro benigni SOLO se esiste la colonna
-    if "tumor/benign" in dataset.columns:
-        dataset = dataset.drop(dataset[dataset["tumor/benign"] == 0].index, axis=0)
-    else:
-        print(Fore.YELLOW + "ATTENZIONE: 'tumor/benign' non presente -> salto filtro benigni")
-
-    # GRADE
+    """
+    Standardizzo GRADE istologico
+    """
     if 'GRADE' in dataset.columns:
         dataset['GRADE'] = dataset['GRADE'].apply(standardizzazione_grade)
 
-    # KI67
+    """
+    Vado a standardizzare ki-67[%] da categorico/numerico
+    """
     if 'KI67 [%]' in dataset.columns:
+        # Applica la funzione che gestisce tutti questi casi
         dataset['KI67 [%]'] = dataset['KI67 [%]'].apply(standardizzazione_ki67)
 
-    # ===== Biomarker in percentuale (preferiti) =====
-    for col in ['ER [%]', 'PR [%]', 'HER2 [%]']:
-        if col in dataset.columns:
-            dataset[col] = dataset[col].apply(standardizzazione_percentuale)
 
-    # ===== Se esistono solo versioni [SII], tienile/standardizzale (opzionale) =====
+    """
+    Vado a standardizzare i marcatori biologici
+    """
     if 'ER [SII]' in dataset.columns:
         dataset['ER [SII]'] = dataset['ER [SII]'].apply(standardizzazione_IHC)
+
+
     if 'PR [SII]' in dataset.columns:
         dataset['PR [SII]'] = dataset['PR [SII]'].apply(standardizzazione_IHC)
+
+
     if 'HER2 [SII]' in dataset.columns:
         dataset['HER2 [SII]'] = dataset['HER2 [SII]'].apply(standardizzazione_IHC)
 
-    # isTN
+
+
+    """
+    Vado a standardizzare isTN (isTripleNegative)
+    """
     if 'isTN' in dataset.columns:
-        dataset['isTN'] = pd.to_numeric(dataset['isTN'], errors='coerce').fillna(0)
+
+
+        # Converto da obj a numerico
+        # isTN è una colonna binaria: 0 o 1
+        dataset['isTN'] = pd.to_numeric(dataset['isTN'], errors='coerce')
+
+
+        # Sostituisco i valori mancanti (NaN) con 0
+        dataset['isTN'] = dataset['isTN'].fillna(0)
+
+
+        # Converto il valore in binario: 0 o 1
+        # Qualsiasi valore != 1 diventa 0
         dataset['isTN'] = (dataset['isTN'] == 1).astype(int)
 
-    return dataset
 
+    return dataset
 
 
 
