@@ -3,37 +3,33 @@ import numpy as np
 import sys
 from pathlib import Path
 
-
 from colorama import Fore, init
-# Resetto il colore dopo ogni print
-init(autoreset=True)
+init(autoreset=True)  # Reset automatico del colore dopo ogni print
 
+# =========================================================
+# Impostazione dei path e import dei moduli di progetto
+# =========================================================
 
 # Aggiungo la cartella 'src' al path di Python
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-
 from data_validation.DataValidation import DataValidation
 
-
-# Percorso della CARTELLA dataset
+# Percorso principale del dataset
 DATASET_PATH = Path('/Users/francesco/Tesi/BC-ML4/dataset')
-# Percorso della cartella cleaned
+
+# Cartella di output dei dataset puliti
 PATH_CLEANED_DATASET = DATASET_PATH / 'cleaned'
 
-
-# Lista dei CSV da pulire
+# Lista dei file CSV da processare
 FILENAME = [
-    'medsam_dynamic.csv',
-    'original_dynamic.csv',
-    'preprocessed_dynamic.csv',
-    't2_medsam_masks.csv',
-    't2_original_masks.csv',
-    't2_preprocessed_masks.csv'
+    'ambl_lesions_radiomic_medsam.csv',
+    'ambl_lesions.csv',
 ]
 
-
+# =========================================================
 # Colonne da rimuovere
+# =========================================================
 colonne_da_rimuovere = [
     'Unnamed: 0',
     'Registered Ax T2 FSE path',
@@ -51,346 +47,225 @@ colonne_da_rimuovere = [
     'TemporalResolution 3',
     'TemporalResolution 4',
     'TemporalResolution 5',
-    'ER [%]',       
-    'PR [%]',       
-    'HER2 [%]',             
+    'ER [%]',
+    'PR [%]',
+    'HER2 [%]',
 ]
 
+# =========================================================
+# Funzione di standardizzazione del Ki-67
+# =========================================================
 
-
-# **************************************
-#   Funzione per standardizzare il ki-67
-# **************************************
 def standardizzazione_ki67(val):
-    # Se il valore è NaN, lo ritorna come NaN
+    """
+    Standardizzo il valore di Ki-67 (%), che nel dataset può essere:
+    - numerico
+    - categorico (low / intermediate / high)
+    - un intervallo (es. '10 to 20')
+    
+    Quando non interpretabile, ritorno NaN.
+    """
+
     if pd.isna(val):
         return np.nan
 
-
-    # Converto a stringa e rimuovo spazi bianchi
     val_str = str(val).lower().strip()
 
-
-    # Se il valore è vuoto, -1, o "nan", lo ritorna come NaN
     if val_str in ['-1', '', 'nan', 'none']:
         return np.nan
 
-
-    # ===============================
-    # Gestisce valori con intervalli 
-    # ===============================
+    # Gestione degli intervalli
     if 'to' in val_str:
-        # Provo a dividere per numeri e calcolo la media
         try:
-            parts = val_str.split('to')
-            num1 = float(parts[0].strip())
-            num2 = float(parts[1].strip())
+            num1, num2 = map(float, val_str.split('to'))
             return (num1 + num2) / 2
         except:
-            pass
+            # Fallback su categorie testuali
+            if 'low' in val_str and 'intermediate' in val_str:
+                return 20
+            elif 'intermediate' in val_str and 'high' in val_str:
+                return 36.5
+            elif 'low' in val_str and 'high' in val_str:
+                return 32.5
 
-
-        # Se fallisce la conversione numerica, provo con le categorie
-        if 'low' in val_str and 'intermediate' in val_str:
-            return 20
-        elif 'intermediate' in val_str and 'high' in val_str:
-            return 36.5
-        elif 'low' in val_str and 'high' in val_str:
-            return 32.5
-
-
-    # ============================================
-    # Gestisce valori categorici (low, intermediate, high)
-    # ============================================
+    # Categorie qualitative
     if 'low' in val_str:
-        return 15      # < 15%
+        return 15
     elif 'intermediate' in val_str:
-        return 23      # 16-30%
+        return 23
     elif 'high' in val_str:
-        return 50      # > 30%
+        return 50
 
-
-    # ============================================
-    # Gestisce valori numerici puri
-    # ============================================
+    # Valori numerici puri
     try:
         num = float(val_str)
-        # Accetta solo valori nel range 0-100
-        if 0 <= num <= 100:
-            return num
-        else:
-            return np.nan
+        return num if 0 <= num <= 100 else np.nan
     except:
-        # Ritorna NaN se non viene convertito
         return np.nan
 
+# =========================================================
+# Funzione di standardizzazione del GRADE istologico
+# =========================================================
 
-
-# ***********************************
-#   Funzione per standardizzare GRADE
-# ***********************************
 def standardizzazione_grade(val):
     """
-        Standardizza i valori GRADE istologico:
-            - Gestisce -1 e -1.0 come NaN (valori mancanti)
-            - Gestisce intervalli come "1 to 2", "2 to 3", "2 to3" calcolando la media
-            - Converte valori numerici validi (1, 2, 3)
-            - Tutto il resto diventa NaN
+    Standardizzo il GRADE istologico:
+    - accetto valori 1, 2, 3
+    - gestisco intervalli tipo '1 to 2'
+    - tutto il resto viene considerato NaN
     """
-    # Se il valore è NaN, lo ritorna come NaN
+
     if pd.isna(val):
         return np.nan
-    
-    # Converto a stringa e rimuovo spazi bianchi
+
     val_str = str(val).lower().strip()
-    
-    # Se il valore è vuoto, -1, -1.0 o "nan", lo ritorna come NaN
+
     if val_str in ['-1', '-1.0', '', 'nan', 'none']:
         return np.nan
-    
-    # ===============================
-    # Gestisce valori con intervalli 
-    # ===============================
+
     if 'to' in val_str:
         try:
-            # Rimuovo eventuali spazi e splitta per "to"
             parts = val_str.replace(' ', '').split('to')
-            num1 = float(parts[0])
-            num2 = float(parts[1])
-            
-            # Verifico che siano valori validi (1-3)
+            num1, num2 = map(float, parts)
             if 1 <= num1 <= 3 and 1 <= num2 <= 3:
-                # Ritorno la media dell'intervallo
                 return (num1 + num2) / 2
-            else:
-                return np.nan
         except:
             return np.nan
-    
-    # ============================================
-    # Gestisce valori numerici puri
-    # ============================================
+
     try:
         num = float(val_str)
-        # Accetta solo valori nel range 1-3
-        if num in [1, 2, 3, 1.0, 2.0, 3.0]:
-            return num
-        else:
-            return np.nan
+        return num if num in [1, 2, 3] else np.nan
     except:
-        # Ritorna NaN se non viene convertito
         return np.nan
 
+# =========================================================
+# Funzione di standardizzazione IHC (ER, PR, HER2)
+# =========================================================
 
-
-# *****************************************************
-#   Funzione per standardizzare IHC (Immunoistochimica)
-# *****************************************************
 def standardizzazione_IHC(val):
     """
-        Standardizza i valori IHC (ER, PR, HER2) in una scala 0-3:
-        0 = Negativo (neg)
-        1 = Debole (weak, weak to moderate)
-        2 = Moderato (moderate, Moderate to strong)
-        3 = Forte (strong, pos)
+    Converto i valori immunoistochimici su una scala 0–3:
+    0 = negativo
+    1 = debole
+    2 = moderato
+    3 = forte
     """
-    # Se il valore è NaN, lo ritorna come NaN
+
     if pd.isna(val):
         return np.nan
-    
-    # Converto a stringa, normalizzo (minuscolo, rimuovo spazi)
+
     val_str = str(val).lower().strip()
-    
-    # Se il valore è vuoto, -1, -1.0 o "nan", lo ritorna come NaN
+
     if val_str in ['-1', '-1.0', '', 'nan', 'none']:
         return np.nan
-    
-    # ===============================================
-    # PRIMO: Gestisci i valori categorici con intervalli
-    # ===============================================
+
+    # Casi con intervalli qualitativi
     if 'weak' in val_str and 'moderate' in val_str:
         return 1.5
-    
-    # "moderate to strong" oppure "moderate strong" → 2.5 (medio tra moderate e strong)
     if 'moderate' in val_str and 'strong' in val_str:
         return 2.5
-    
-    # "weak to strong" → 2 (caso raro)
     if 'weak' in val_str and 'strong' in val_str:
         return 2
-    
-    # ===============================================
-    # SECONDO: Gestisci i singoli valori categorici
-    # ===============================================
+
+    # Categorie singole
     if 'neg' in val_str or val_str == '0':
         return 0
-    
-    # Debole / Positivo generico (ma non strong né moderate)
-    elif 'weak' in val_str or val_str == '1':
+    if 'weak' in val_str or val_str == '1':
         return 1
-    elif val_str == 'pos' and 'moderate' not in val_str and 'strong' not in val_str:
-        return 1
-    
-    # Moderato
-    elif 'moderate' in val_str or val_str == '2':
+    if 'moderate' in val_str or val_str == '2':
         return 2
-    
-    # Forte / Positivo specifico
-    elif 'strong' in val_str or val_str == '3':
+    if 'strong' in val_str or val_str == '3' or val_str == 'pos':
         return 3
-    elif val_str == 'pos':
-        return 3
-    
-    # ===============================================
-    # TERZO: Gestisci i valori numerici decimali
-    # ===============================================
+
+    # Fallback numerico
     try:
         num = float(val_str)
-        
-        # Mapping dei valori decimali sulla scala 0-3
-        # Valori < 0.5 → 0 (negativo)
         if num < 0.5:
             return 0
-        # Valori 0.5-1.5 → 1 (debole)
         elif num < 1.5:
             return 1
-        # Valori 1.5-2.5 → 2 (moderato)
         elif num < 2.5:
             return 2
-        # Valori >= 2.5 → 3 (forte)
         else:
             return 3
     except:
-        # Se non riesce a convertire, ritorna NaN
         return np.nan
 
+# =========================================================
+# Funzione principale di pulizia del dataset
+# =========================================================
 
-
-# **************************************
-#   Funzione per la pulire il dataset
-# **************************************
 def clean_dataset(dataset):
     """
-    Vado a rimuovere le colonne che non mi servono     
+    Applico tutte le operazioni di pulizia:
+    - rimozione colonne inutili
+    - filtro sui tumori maligni
+    - standardizzazione delle variabili cliniche
     """
-    dataset = dataset.drop(columns=[col for col in colonne_da_rimuovere if col in dataset.columns]) 
 
-    # Vado a cancellare le righe che si riferiscono al tumore benigno, visto che mi interessa solo il maligno
-    dataset = dataset.drop(dataset[dataset["tumor/benign"]==0].index, axis=0)
+    # Rimuovo le colonne non necessarie
+    dataset = dataset.drop(
+        columns=[c for c in colonne_da_rimuovere if c in dataset.columns]
+    )
 
-    """
-    Standardizzo GRADE istologico
-    """
+    # Tengo solo le lesioni maligne
+    dataset = dataset.drop(dataset[dataset["tumor/benign"] == 0].index)
+
+    # Standardizzazione GRADE
     if 'GRADE' in dataset.columns:
         dataset['GRADE'] = dataset['GRADE'].apply(standardizzazione_grade)
 
-    """
-    Vado a standardizzare ki-67[%] da categorico/numerico
-    """
+    # Standardizzazione Ki-67
     if 'KI67 [%]' in dataset.columns:
-        # Applica la funzione che gestisce tutti questi casi
         dataset['KI67 [%]'] = dataset['KI67 [%]'].apply(standardizzazione_ki67)
 
+    # Standardizzazione biomarcatori IHC
+    for col in ['ER [SII]', 'PR [SII]', 'HER2 [SII]']:
+        if col in dataset.columns:
+            dataset[col] = dataset[col].apply(standardizzazione_IHC)
 
-    """
-    Vado a standardizzare i marcatori biologici
-    """
-    if 'ER [SII]' in dataset.columns:
-        dataset['ER [SII]'] = dataset['ER [SII]'].apply(standardizzazione_IHC)
-
-
-    if 'PR [SII]' in dataset.columns:
-        dataset['PR [SII]'] = dataset['PR [SII]'].apply(standardizzazione_IHC)
-
-
-    if 'HER2 [SII]' in dataset.columns:
-        dataset['HER2 [SII]'] = dataset['HER2 [SII]'].apply(standardizzazione_IHC)
-
-
-
-    """
-    Vado a standardizzare isTN (isTripleNegative)
-    """
+    # Standardizzazione isTN (0/1)
     if 'isTN' in dataset.columns:
-
-
-        # Converto da obj a numerico
-        # isTN è una colonna binaria: 0 o 1
-        dataset['isTN'] = pd.to_numeric(dataset['isTN'], errors='coerce')
-
-
-        # Sostituisco i valori mancanti (NaN) con 0
-        dataset['isTN'] = dataset['isTN'].fillna(0)
-
-
-        # Converto il valore in binario: 0 o 1
-        # Qualsiasi valore != 1 diventa 0
+        dataset['isTN'] = pd.to_numeric(dataset['isTN'], errors='coerce').fillna(0)
         dataset['isTN'] = (dataset['isTN'] == 1).astype(int)
-
 
     return dataset
 
+# =========================================================
+# Elaborazione di tutti i file
+# =========================================================
 
-
-# **************************************
-#   Lettura di tutti i file
-# **************************************
 def process_all_file():
-    try:
-        for nome_file in FILENAME:
-            try:
-                # Percorso del file originale
-                RAW_PATH_DATASET = DATASET_PATH / "original" / nome_file
-                # File di output
-                OUTPUT_FILE = PATH_CLEANED_DATASET / nome_file
+    for nome_file in FILENAME:
+        try:
+            RAW_PATH = DATASET_PATH / "original" / nome_file
+            OUTPUT_PATH = PATH_CLEANED_DATASET / nome_file
 
+            print(Fore.BLUE + f"\n{'='*80}")
+            print(Fore.BLUE + f"Sto pulendo: {nome_file}")
+            print(Fore.BLUE + f"{'='*80}")
 
-                print(Fore.BLUE + f"\n{'='*80}")
-                print(Fore.BLUE + f"Sto pulendo: {nome_file}")
-                print(Fore.BLUE + f"{'='*80}")
+            dataset = pd.read_csv(RAW_PATH)
+            start_len = len(dataset)
 
+            dataset_cleaned = clean_dataset(dataset)
+            end_len = len(dataset_cleaned)
 
-                # Carico il file CSV originale
-                dataset = pd.read_csv(RAW_PATH_DATASET)
-                # Mi salvo la lunghezza iniziale (numero di righe)
-                start_len = len(dataset)
+            checks = DataValidation(dataset_cleaned, nome_file)
+            dataset_cleaned.to_csv(OUTPUT_PATH, index=False)
 
+            print(Fore.MAGENTA + "\nRiepilogo:")
+            print(Fore.MAGENTA + f"  Righe: {start_len} → {end_len}")
+            print(Fore.MAGENTA + f"  Colonne: {len(dataset.columns)} → {len(dataset_cleaned.columns)}")
+            print(Fore.LIGHTYELLOW_EX + f"  Controlli DataValidation superati: {checks} /5")
+            print(Fore.GREEN + f"{nome_file} pulizia completata")
 
-                # Pulisco il dataset con la funzione clean_dataset
-                dataset_cleaned = clean_dataset(dataset)
-                # Mi salvo la lunghezza dopo la pulizia
-                end_len = len(dataset_cleaned)
-                
+        except Exception as e:
+            print(Fore.RED + f"Errore in {nome_file}: {e}")
 
+# =========================================================
+# Entry point
+# =========================================================
 
-                # Verifico il DataSet pulito
-                checks = DataValidation(dataset_cleaned, nome_file)
-
-
-
-                # Salvo il dataset pulito nel CSV di output
-                # index=False = non salva l'indice delle righe
-                dataset_cleaned.to_csv(OUTPUT_FILE, index=False)
-
-
-                print(Fore.MAGENTA + f"\nRiepilogo:")
-                print(Fore.MAGENTA + f"  Righe: {start_len} → {end_len}")
-                print(Fore.MAGENTA + f"  Colonne: {len(dataset.columns)} → {len(dataset_cleaned.columns)}")
-                print(Fore.LIGHTYELLOW_EX + f"  Numero di controlli superati con DataValidation: {checks} /5")
-                print(Fore.GREEN + f"{nome_file} pulizia completata")
-
-
-            except Exception as e:
-                print(Fore.RED + f" Errore in {nome_file}: {str(e)}\n")
-
-
-    except Exception as e:
-        print(Fore.RED + f"ERRORE generale: {e}")
-
-
-
-# **************************************
-#   Avvio del programma per la Pulizia
-# **************************************
 if __name__ == "__main__":
     process_all_file()
