@@ -144,7 +144,7 @@ def standardizzazione_grade(val):
 
 def standardizzazione_IHC(val):
     """
-    Converto i valori immunoistochimici su una scala 0–3:
+    Converto i valori immunoistochimici su una scala 0 - 3:
     0 = negativo
     1 = debole
     2 = moderato
