@@ -19,7 +19,7 @@ from data_validation.DataValidation import DataValidation
 DATASET_PATH = Path('/Users/francesco/Tesi/BC-ML4/dataset')
 
 # Cartella di output dei dataset puliti
-PATH_CLEANED_DATASET = DATASET_PATH / 'cleaned'
+PATH_CLEANED_DATASET = DATASET_PATH / 'cleaned/Test'
 
 # Lista dei file CSV da processare
 FILENAME = [
