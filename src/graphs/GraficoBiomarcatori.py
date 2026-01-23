@@ -74,7 +74,7 @@ def plot_biomarkers(cleaned_file, output_dir):
 
         # Titolo e assi
         ax.set_title(
-            f'{bio} - Distribuzione delle Lesioni Maligne',
+            f'Distribuzione del Human Epidermal Growth Factor Receptor 2 ({bio})',
             fontsize=17,
             fontweight='bold',
             pad=18
