@@ -1,10 +1,10 @@
 dataset,target,F1-score,Accuracy,AUC
-duke_lesions_radiomic,ER_class,0.639 ± 0.038,0.553 ± 0.036,0.515 ± 0.053
-duke_lesions_radiomic,PR_class,0.444 ± 0.078,0.509 ± 0.046,0.485 ± 0.026
-duke_lesions_radiomic,HER2_class,0.331 ± 0.086,0.539 ± 0.057,0.463 ± 0.026
-duke_lesions,ER_class,0.630 ± 0.053,0.546 ± 0.070,0.530 ± 0.100
-duke_lesions,PR_class,0.483 ± 0.011,0.550 ± 0.049,0.539 ± 0.060
-duke_lesions,HER2_class,0.171 ± 0.086,0.615 ± 0.033,0.454 ± 0.057
+duke_lesions_radiomic,ER_class,0.613 ± 0.039,0.536 ± 0.027,0.515 ± 0.053
+duke_lesions_radiomic,PR_class,0.426 ± 0.102,0.509 ± 0.055,0.485 ± 0.026
+duke_lesions_radiomic,HER2_class,0.232 ± 0.080,0.577 ± 0.066,0.463 ± 0.026
+duke_lesions,ER_class,0.591 ± 0.089,0.550 ± 0.093,0.530 ± 0.100
+duke_lesions,PR_class,0.484 ± 0.017,0.546 ± 0.048,0.539 ± 0.060
+duke_lesions,HER2_class,0.180 ± 0.073,0.594 ± 0.081,0.454 ± 0.057
 ambl_lesions_radiomic,ER_class,0.439 ± 0.040,0.698 ± 0.002,0.620 ± 0.019
 ambl_lesions_radiomic,PR_class,0.515 ± 0.050,0.733 ± 0.067,0.895 ± 0.010
 ambl_lesions_radiomic,HER2_class,0.506 ± 0.076,0.805 ± 0.105,0.787 ± 0.089

@@ -1,7 +1,7 @@
 dataset,target,F1-score,Accuracy,AUC
-duke_lesions,ER_class,0.639 ± 0.060,0.567 ± 0.069,0.549 ± 0.082
-duke_lesions,PR_class,0.412 ± 0.066,0.519 ± 0.041,0.512 ± 0.059
-duke_lesions,HER2_class,0.119 ± 0.052,0.660 ± 0.026,0.431 ± 0.064
+duke_lesions,ER_class,0.538 ± 0.070,0.546 ± 0.065,0.555 ± 0.100
+duke_lesions,PR_class,0.496 ± 0.034,0.509 ± 0.029,0.518 ± 0.068
+duke_lesions,HER2_class,0.446 ± 0.041,0.584 ± 0.050,0.416 ± 0.058
 ambl_lesions,ER_class,0.945 ± 0.068,0.946 ± 0.066,0.965 ± 0.043
 ambl_lesions,PR_class,0.974 ± 0.031,0.975 ± 0.031,0.994 ± 0.013
 ambl_lesions,HER2_class,0.697 ± 0.231,0.873 ± 0.112,0.888 ± 0.116
