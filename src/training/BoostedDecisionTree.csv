@@ -1,13 +1,13 @@
-dataset,target,F1-score,Accuracy,AUC
-duke_lesions_radiomic,ER_class,0.500 ± 0.063,0.570 ± 0.052,0.504 ± 0.099
-duke_lesions_radiomic,PR_class,0.503 ± 0.037,0.522 ± 0.019,0.556 ± 0.084
-duke_lesions_radiomic,HER2_class,0.428 ± 0.060,0.477 ± 0.073,0.430 ± 0.043
-duke_lesions,ER_class,0.523 ± 0.061,0.543 ± 0.045,0.537 ± 0.078
-duke_lesions,PR_class,0.505 ± 0.034,0.509 ± 0.031,0.505 ± 0.044
-duke_lesions,HER2_class,0.445 ± 0.022,0.557 ± 0.038,0.384 ± 0.055
-ambl_lesions_radiomic,ER_class,0.612 ± 0.123,0.847 ± 0.120,0.868 ± 0.015
-ambl_lesions_radiomic,PR_class,0.961 ± 0.039,0.985 ± 0.015,1.000 ± 0.000
-ambl_lesions_radiomic,HER2_class,0.376 ± 0.055,0.632 ± 0.065,0.458 ± 0.001
-ambl_lesions,ER_class,0.591 ± 0.108,0.830 ± 0.103,0.896 ± 0.065
-ambl_lesions,PR_class,0.894 ± 0.028,0.968 ± 0.002,0.997 ± 0.003
-ambl_lesions,HER2_class,0.337 ± 0.015,0.680 ± 0.047,0.534 ± 0.051
+dataset,target,F1-score,Accuracy,Balanced Accuracy,AUC
+duke_lesions_radiomic,ER_class,0.500 ± 0.063,0.570 ± 0.052,0.530 ± 0.061,0.504 ± 0.099
+duke_lesions_radiomic,PR_class,0.503 ± 0.037,0.522 ± 0.019,0.545 ± 0.049,0.556 ± 0.084
+duke_lesions_radiomic,HER2_class,0.428 ± 0.060,0.477 ± 0.073,0.435 ± 0.060,0.430 ± 0.043
+duke_lesions,ER_class,0.523 ± 0.061,0.543 ± 0.045,0.535 ± 0.062,0.537 ± 0.078
+duke_lesions,PR_class,0.505 ± 0.034,0.509 ± 0.031,0.515 ± 0.041,0.505 ± 0.044
+duke_lesions,HER2_class,0.445 ± 0.022,0.557 ± 0.038,0.446 ± 0.020,0.384 ± 0.055
+ambl_lesions_radiomic,ER_class,0.612 ± 0.123,0.847 ± 0.120,0.620 ± 0.130,0.868 ± 0.015
+ambl_lesions_radiomic,PR_class,0.961 ± 0.039,0.985 ± 0.015,0.975 ± 0.025,1.000 ± 0.000
+ambl_lesions_radiomic,HER2_class,0.376 ± 0.055,0.632 ± 0.065,0.394 ± 0.072,0.458 ± 0.001
+ambl_lesions,ER_class,0.591 ± 0.108,0.830 ± 0.103,0.589 ± 0.099,0.896 ± 0.065
+ambl_lesions,PR_class,0.894 ± 0.028,0.968 ± 0.002,0.933 ± 0.017,0.997 ± 0.003
+ambl_lesions,HER2_class,0.337 ± 0.015,0.680 ± 0.047,0.335 ± 0.015,0.534 ± 0.051
