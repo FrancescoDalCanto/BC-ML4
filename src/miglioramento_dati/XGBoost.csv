@@ -1,0 +1,5 @@
+dataset,target,F1-score,Accuracy,Balanced Accuracy,AUC
+duke_lesions,ER_class,0.543 ± 0.056,0.589 ± 0.047,0.554 ± 0.049,0.545 ± 0.047
+duke_lesions,PR_class,0.468 ± 0.059,0.480 ± 0.054,0.492 ± 0.055,0.478 ± 0.066
+ambl_lesions,ER_class,0.536 ± 0.064,0.624 ± 0.044,0.558 ± 0.048,0.584 ± 0.054
+ambl_lesions,PR_class,0.557 ± 0.061,0.566 ± 0.062,0.577 ± 0.058,0.572 ± 0.060
