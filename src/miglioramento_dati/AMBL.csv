@@ -1,0 +1,3 @@
+Dataset,Target,Accuracy,Balanced Accuracy,F1-score,ROC-AUC
+AMBL,PR [SII],0.583 ± 0.149,0.583 ± 0.149,0.576 ± 0.196,0.522 ± 0.142
+AMBL,ER [SII],0.467 ± 0.067,0.467 ± 0.067,0.473 ± 0.104,0.444 ± 0.186
