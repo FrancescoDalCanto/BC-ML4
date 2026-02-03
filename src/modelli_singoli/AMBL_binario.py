@@ -1,4 +1,3 @@
-
 import pandas as pd
 from pathlib import Path
 
@@ -33,9 +32,25 @@ if missing:
 
 print("✓ Colonne trovate!")
 
+# Rimuovi colonne
+print("\n" + "=" * 80)
+print("3. RIMOZIONE COLONNE")
+print("=" * 80)
+
+cols_to_remove = ["lesion idx", "tumor/benign"]
+cols_removed = [c for c in cols_to_remove if c in df.columns]
+
+if cols_removed:
+    df = df.drop(columns=cols_removed)
+    print(f"✓ Colonne rimosse: {cols_removed}")
+else:
+    print(f"⚠ Nessuna colonna da rimuovere trovata")
+
+print(f"Shape dopo rimozione: {df.shape}")
+
 # Conversione a binario
 print("\n" + "=" * 80)
-print("3. CONVERSIONE A BINARIO")
+print("4. CONVERSIONE A BINARIO")
 print("=" * 80)
 
 # ER binary (>= 1)
@@ -58,17 +73,17 @@ print(f"  Distribuzione: {df['HER2 [SII]'].value_counts().to_dict()}")
 
 # Rimuovi righe con NaN nei target binari
 print("\n" + "=" * 80)
-print("4. RIMOZIONE NaN")
+print("5. RIMOZIONE NaN")
 print("=" * 80)
 
 print(f"\nShape PRIMA: {df.shape}")
-df_clean = df.dropna(subset=["ER [SII]", "PR [SII]", "PR [SII]"]).copy()
+df_clean = df.dropna(subset=["ER [SII]", "PR [SII]", "HER2 [SII]"]).copy()
 print(f"Shape DOPO:  {df_clean.shape}")
 print(f"Righe rimosse: {df.shape[0] - df_clean.shape[0]}")
 
 # Salva file
 print("\n" + "=" * 80)
-print("5. SALVATAGGIO")
+print("6. SALVATAGGIO")
 print("=" * 80)
 
 OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -80,7 +95,7 @@ print(f"  Colonne: {df_clean.shape[1]}")
 
 # Verifica finale
 print("\n" + "=" * 80)
-print("6. VERIFICA COLONNE BINARIE")
+print("7. VERIFICA COLONNE BINARIE")
 print("=" * 80)
 
 print(f"\nPrime righe con colonne binarie:")
