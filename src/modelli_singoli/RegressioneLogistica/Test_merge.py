@@ -1,10 +1,11 @@
-# Import
 from pathlib import Path
 import pandas as pd
 import numpy as np
 import re
-from xgboost import XGBClassifier
-from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold, GridSearchCV
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import StratifiedGroupKFold,StratifiedKFold, GridSearchCV
 from sklearn.metrics import f1_score, accuracy_score, roc_auc_score, balanced_accuracy_score, classification_report, confusion_matrix
 
 import warnings
@@ -16,7 +17,7 @@ TIPO_FOLD = "kfold"
 BALANCE_TEST = True
 
 # MODIFICATO: Ora c'è un solo target per il dataset merged
-TARGET_COL = "ER [SII]"  # Colonna unificata dopo la fusione
+TARGET_COL = "HER2 [SII]"  # Colonna unificata dopo la fusione
 
 
 # Funzioni
@@ -84,8 +85,6 @@ def build_features_and_groups(df, target_col):
     drop_cols = [
         "Patient ID",
         target_col,
-        "ER [SII]",      # Altri target
-        "HER2 [SII]"     # Altri target
     ]
     
     # Mostro quali colonne vengono rimosse
@@ -232,21 +231,14 @@ def balance_test_sets(cv_splits, y):
 
 # Grid Search
 def gridsearch(X, y, splits):
-    model = XGBClassifier(
-        random_state=42,
-        n_jobs=1,
-        objective="binary:logistic",
-        eval_metric="logloss",
-        tree_method="hist",
-        subsample=0.8,
-        colsample_bytree=0.8,
-        min_child_weight=3
-    )
+    model = Pipeline([
+                ("scaler", StandardScaler()),
+                ("lr", LogisticRegression(max_iter=5000, solver="liblinear"))
+            ])
 
     param_grid = {
-        "n_estimators": [50, 75, 100],
-        "max_depth": [2, 3, 4],
-        "learning_rate": [0.05, 0.1]
+        "lr__C": [0.01, 0.1, 1, 10],
+        "lr__penalty": ["l1", "l2"]
     }
 
     grid = GridSearchCV(
@@ -272,7 +264,16 @@ def evaluate_folds(X, y, splits, best_params):
     
     for fold_num, (train_idx, test_idx) in enumerate(splits):
         # Train
-        model = XGBClassifier(**best_params)
+        model = Pipeline([
+            ("scaler", StandardScaler()),
+            ("lr", LogisticRegression(
+                max_iter=5000,
+                solver="liblinear",
+                random_state=42
+            ))
+        ])
+
+        model.set_params(**best_params)
         model.fit(X.iloc[train_idx], y.iloc[train_idx])
         
         # Test
@@ -444,3 +445,42 @@ for name, res in results.items():
     print(f"  Accuracy         = {res['mean_acc']:.3f}  ±  {res['std_acc']:.3f}")
     print(f"  Balanced Acc     = {res['mean_bal_acc']:.3f}  ±  {res['std_bal_acc']:.3f}") 
     print(f"  AUC              = {res['mean_auc']:.3f}  ±  {res['std_auc']:.3f}")
+
+# ============================================================================
+# SALVATAGGIO RISULTATI IN CSV
+# ============================================================================
+rows = []
+
+for name, res in results.items():
+    rows.append({
+        "dataset": res["dataset"],
+        "target": res["target"],
+        "mean_f1": res["mean_f1"],
+        "std_f1": res["std_f1"],
+        "mean_accuracy": res["mean_acc"],
+        "std_accuracy": res["std_acc"],
+        "mean_balanced_accuracy": res["mean_bal_acc"],
+        "std_balanced_accuracy": res["std_bal_acc"],
+        "mean_auc": res["mean_auc"],
+        "std_auc": res["std_auc"]
+    })
+
+results_df = pd.DataFrame(rows)
+
+# Arrotonda a 3 cifre decimali
+results_df = results_df.round(3)
+
+output_csv = Path("/Users/francesco/Tesi/BC-ML4/src/modelli_singoli/RegressioneLogistica/rl_merged.csv")
+
+write_header = not output_csv.exists()
+
+results_df.to_csv(
+    output_csv,
+    index=False,
+    mode="a",
+    header=write_header
+)
+
+print("\nRisultati aggiunti a:")
+print(output_csv)
+
