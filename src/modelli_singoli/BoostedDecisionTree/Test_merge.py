@@ -442,8 +442,8 @@ def train(file_path, csv_name, target_col, tipo_fold, balance_test=False):
 results = {}
 
 results["MERGED_PR"] = train(
-    FILE_PATH / "merged_lesions.csv",
-    "merged_lesions",
+    FILE_PATH / "merged_lesions_medsam.csv",
+    "merged_medsam",
     target_col=TARGET_COL,
     tipo_fold=TIPO_FOLD,
     balance_test=BALANCE_TEST

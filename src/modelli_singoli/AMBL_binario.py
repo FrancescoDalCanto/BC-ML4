@@ -1,8 +1,8 @@
 import pandas as pd
 from pathlib import Path
 
-INPUT_FILE = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned/ambl_lesions.csv')
-OUTPUT_FILE = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned/ambl_lesions_binary.csv')
+INPUT_FILE = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned/ambl_lesions_radiomic_medsam.csv')
+OUTPUT_FILE = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned/ambl_lesions_radiomic_medsam_binary.csv')
 
 # ============================================================================
 # CONVERSIONE

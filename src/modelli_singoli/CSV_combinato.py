@@ -2,9 +2,9 @@ import pandas as pd
 from pathlib import Path
 
 # File input
-AMBL_FILE = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned/ambl_lesions_binary.csv')
-DUKE_FILE = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned/duke_lesions.csv')
-OUTPUT_FILE = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned/merged_lesions.csv')
+AMBL_FILE = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned/ambl_lesions_radiomic_medsam_binary.csv')
+DUKE_FILE = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned/duke_lesions_radiomic_medsam.csv')
+OUTPUT_FILE = Path('/Users/francesco/Tesi/BC-ML4/dataset/cleaned/merged_lesions_medsam.csv')
 
 print("=" * 80)
 print("FUSIONE DATASET AMBL + DUKE")

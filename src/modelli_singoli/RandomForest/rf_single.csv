@@ -1,7 +1,0 @@
-Target,Dataset,F1-score,F1_std,Accuracy,Acc_std,Balanced Acc,Bal_Acc_std,AUC,AUC_std
-ER,duke_lesions,0.779,0.050,0.764,0.056,0.764,0.056,0.829,0.051
-ER,ambl_lesions_binary,0.775,0.084,0.738,0.097,0.738,0.097,0.772,0.152
-HER2,duke_lesions,0.478,0.094,0.524,0.063,0.524,0.063,0.468,0.084
-HER2,ambl_lesions_binary,0.293,0.362,0.617,0.145,0.617,0.145,0.700,0.204
-PR,duke_lesions,0.480,0.087,0.533,0.097,0.533,0.097,0.515,0.112
-PR,ambl_lesions_binary,0.645,0.096,0.652,0.121,0.652,0.121,0.706,0.105
