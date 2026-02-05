@@ -26,7 +26,7 @@ Grazie mille!
 
 ### Task 1.1: Setup delle segmentazioni
 **Tempo stimato: 1 giorno**
-- [ok ] Ricevere risposta da Gianluca
+- [ ] Ricevere risposta da Gianluca
 - [ ] Verificare quali file usare (originali vs preprocessate)
 - [ ] Preparare due set di dati:
   - Segmentazioni originali → Radiomic Lesion
