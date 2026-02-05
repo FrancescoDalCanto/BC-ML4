@@ -290,8 +290,11 @@ def evaluate_folds(X, y, splits, best_params):
         # Se il test set è bilanciato, ACC dovrebbe = BAL_ACC
         diff = abs(acc - bal_acc)
 
-        # Stampo le metriche dei test set
+        # Stampo le metrice dei test set
         if True:
+            print(f"\n{'='*80}")
+            print(f"FOLD {fold_num}/{len(splits)}")
+            print(f"{'='*80}")
             print(f"\n{'─'*80}")
             print("METRICHE TEST SET")
             print(f"{'─'*80}")
@@ -324,7 +327,6 @@ def evaluate_folds(X, y, splits, best_params):
             print("CLASSIFICATION REPORT")
             print(f"{'─'*80}")
             print(classification_report(y_test, y_pred, zero_division=0))
-            
         fold_metrics.append({
             "fold": fold_num,
             "f1": f1,
@@ -333,6 +335,25 @@ def evaluate_folds(X, y, splits, best_params):
             "auc": auc,
             "acc_bal_diff": diff
         })
+     # Stampa riepilogo performance per fold
+    print(f"\n{'='*80}")
+    print("RIEPILOGO PERFORMANCE PER FOLD")
+    print(f"{'='*80}")
+    print(f"{'Fold':<8} {'F1-Score':<12} {'Accuracy':<12} {'Bal. Acc':<12} {'AUC':<12}")
+    print(f"{'─'*80}")
+    for m in fold_metrics:
+        print(f"{m['fold']:<8} {m['f1']:<12.4f} {m['acc']:<12.4f} {m['bal_acc']:<12.4f} {m['auc']:<12.4f}")
+    print(f"{'─'*80}")
+    print(f"{'Mean':<8} {np.mean([m['f1'] for m in fold_metrics]):<12.4f} "
+          f"{np.mean([m['acc'] for m in fold_metrics]):<12.4f} "
+          f"{np.mean([m['bal_acc'] for m in fold_metrics]):<12.4f} "
+          f"{np.mean([m['auc'] for m in fold_metrics]):<12.4f}")
+    print(f"{'Std':<8} {np.std([m['f1'] for m in fold_metrics]):<12.4f} "
+          f"{np.std([m['acc'] for m in fold_metrics]):<12.4f} "
+          f"{np.std([m['bal_acc'] for m in fold_metrics]):<12.4f} "
+          f"{np.std([m['auc'] for m in fold_metrics]):<12.4f}")
+    print(f"{'='*80}\n")
+    
     
     return fold_metrics
 
