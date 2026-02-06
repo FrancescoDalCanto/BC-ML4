@@ -26,32 +26,32 @@ Grazie mille!
 
 ### Task 1.1: Setup delle segmentazioni
 **Tempo stimato: 1 giorno**
-- [ ] Ricevere risposta da Gianluca
-- [ ] Verificare quali file usare (originali vs preprocessate)
-- [ ] Preparare due set di dati:
+- [ok] Ricevere risposta da Gianluca
+- [ok] Verificare quali file usare (originali vs preprocessate)
+- [ok] Preparare due set di dati:
   - Segmentazioni originali → Radiomic Lesion
   - Segmentazioni MedSum → Radiomic MedSum
-- [ ] Testare che i file si carichino correttamente
+- [ok] Testare che i file si carichino correttamente
 
 ### Task 1.2: Ricalcolo risultati su nuove segmentazioni
 **Tempo stimato: 2-3 giorni**
-- [ ] Modificare il codice per caricare il nuovo file all'inizio
-- [ ] Ricalcolare TUTTI i risultati con Radiomic_MedSum (Radiomic Lesion)
-- [ ] Per tutti i modelli (XGBoost, Random Forest, SVM, Logistic Regression)
-- [ ] Per tutte le configurazioni (1, 2, 3)
-- [ ] Per tutti i target (Estrogeni, Progesterone, HER2)
-- [ ] Salvare risultati in formato tabellare
+- [ok] Modificare il codice per caricare il nuovo file all'inizio
+- [ok] Ricalcolare TUTTI i risultati con Radiomic_MedSum (Radiomic Lesion)
+- [ok] Per tutti i modelli (XGBoost, Random Forest, SVM, Logistic Regression)
+- [ok] Per tutte le configurazioni (1, 2, 3)
+- [ok] Per tutti i target (Estrogeni, Progesterone, HER2)
+- [ok] Salvare risultati in formato tabellare
 
 **Deliverable:** Nuove tabelle risultati
 
 ### Task 1.3: Cross-validation tra dataset
 **Tempo stimato: 2 giorni**
-- [ ] Implementare cross-validation MBL → Duke
-- [ ] Implementare cross-validation Duke → MBL
-- [ ] Solo per **estrogeni**
-- [ ] NON usare il CSV mergiato
-- [ ] Per tutti i modelli (o almeno XGBoost)
-- [ ] Salvare risultati
+- [ok] Implementare cross-validation MBL → Duke
+- [ok] Implementare cross-validation Duke → MBL
+- [ok] Solo per **estrogeni**
+- [ok] NON usare il CSV mergiato
+- [ok] Per tutti i modelli (o almeno XGBoost)
+- [ok] Salvare risultati
 
 **Deliverable:** Tabelle cross-validation
 
