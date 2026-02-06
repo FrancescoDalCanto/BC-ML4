@@ -89,7 +89,7 @@ def build_features_and_groups(df, target_col):
     # Mostro quali colonne vengono rimosse
     print(f"\n COLONNE DA RIMUOVERE:")  
     print(f"  Metadati + target: Patient ID, {target_col}")
-    print(f"  Altri target: ER [SII], HER2 [SII]")
+    print(f"  Altri target: PR [SII], HER2 [SII]")
     print(f"  Totale: {len(drop_cols)}")
     
     # Verifico l'esistenza delle colonne

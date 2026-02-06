@@ -1,5 +1,0 @@
-experiment,train_dataset,test_dataset,balance_test,f1,accuracy,balanced_accuracy,auc
-AMBL_to_DUKE,ambl_lesions_binary,duke_lesions,True,0.685,0.577,0.577,0.701
-DUKE_to_AMBL,duke_lesions,ambl_lesions_binary,True,0.758,0.75,0.75,0.813
-AMBL_to_DUKE,ambl_lesions_binary,duke_lesions,False,0.74,0.629,0.576,0.7
-DUKE_to_AMBL,duke_lesions,ambl_lesions_binary,False,0.808,0.768,0.759,0.838
