@@ -5,3 +5,5 @@ MERGED_HER2,merged_lesions,HER2 [SII],0.054,0.044,0.479,0.020,0.479,0.020,0.464,
 MERGED_medsam_HER2,merged_lesions_medsam,HER2 [SII],0.126,0.120,0.521,0.038,0.521,0.038,0.507,0.096
 MERGED_PR,merged_lesions,PR [SII],0.427,0.044,0.503,0.036,0.503,0.036,0.489,0.015
 MERGED_medsam_PR,merged_lesions_medsam,PR [SII],0.467,0.032,0.529,0.043,0.529,0.043,0.540,0.053
+MERGED_PR,merged_lesions,PR [SII],0.427,0.044,0.503,0.036,0.503,0.036,0.489,0.015
+MERGED_medsam_PR,merged_lesions_medsam,PR [SII],0.467,0.032,0.529,0.043,0.529,0.043,0.540,0.053

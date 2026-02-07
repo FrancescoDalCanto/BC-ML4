@@ -1,5 +1,13 @@
 experiment,train_dataset,test_dataset,balance_test,f1,accuracy,balanced_accuracy,auc
-AMBL_to_DUKE,ambl_lesions_binary,duke_lesions,True,0.326,0.496,0.496,0.47
+AMBL_to_DUKE,ambl_lesions_binary,duke_lesions,True,0.326,0.496,0.496,0.470
 DUKE_to_AMBL,duke_lesions,ambl_lesions_binary,True,0.507,0.484,0.484,0.395
-AMBL_medsam_to_DUKE_medsam,ambl_lesions_radiomic_medsam_binary,duke_lesions_radiomic_medsam,True,0.634,0.512,0.512,0.45
+AMBL_medsam_to_DUKE_medsam,ambl_lesions_radiomic_medsam_binary,duke_lesions_radiomic_medsam,True,0.634,0.512,0.512,0.450
+DUKE_medsam_to_AMBL_medsam,duke_lesions_radiomic_medsam,ambl_lesions_radiomic_medsam_binary,True,0.568,0.453,0.453,0.524
+AMBL_to_DUKE,ambl_lesions_binary,duke_lesions,True,0.326,0.496,0.496,0.470
+DUKE_to_AMBL,duke_lesions,ambl_lesions_binary,True,0.507,0.484,0.484,0.395
+AMBL_medsam_to_DUKE_medsam,ambl_lesions_radiomic_medsam_binary,duke_lesions_radiomic_medsam,True,0.634,0.512,0.512,0.450
+DUKE_medsam_to_AMBL_medsam,duke_lesions_radiomic_medsam,ambl_lesions_radiomic_medsam_binary,True,0.568,0.453,0.453,0.524
+AMBL_to_DUKE,ambl_lesions_binary,duke_lesions,True,0.326,0.496,0.496,0.470
+DUKE_to_AMBL,duke_lesions,ambl_lesions_binary,True,0.507,0.484,0.484,0.395
+AMBL_medsam_to_DUKE_medsam,ambl_lesions_radiomic_medsam_binary,duke_lesions_radiomic_medsam,True,0.634,0.512,0.512,0.450
 DUKE_medsam_to_AMBL_medsam,duke_lesions_radiomic_medsam,ambl_lesions_radiomic_medsam_binary,True,0.568,0.453,0.453,0.524

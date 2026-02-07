@@ -3,11 +3,11 @@ DUKE_ER,duke_lesions,ER,0.657,0.029,0.536,0.015,0.536,0.015,0.582,0.047
 AMBL_ER,ambl_lesions_binary,ER [SII],0.644,0.092,0.629,0.084,0.629,0.084,0.589,0.124
 DUKE_medsam_ER,duke_lesions_radiomic_medsam,ER,0.657,0.013,0.496,0.015,0.496,0.015,0.541,0.057
 AMBL_medsam_ER,ambl_lesions_radiomic_medsam_binary,ER [SII],0.668,0.101,0.6,0.152,0.6,0.152,0.588,0.055
-DUKE_ER,duke_lesions,PR,0.506,0.027,0.549,0.02,0.549,0.02,0.525,0.044
+DUKE_ER,duke_lesions,PR,0.506,0.027,0.549,0.020,0.549,0.020,0.525,0.044
 AMBL_ER,ambl_lesions_binary,PR [SII],0.653,0.096,0.638,0.098,0.638,0.098,0.669,0.117
-DUKE_medsam_ER,duke_lesions_radiomic_medsam,PR,0.568,0.03,0.586,0.02,0.586,0.02,0.595,0.04
+DUKE_medsam_ER,duke_lesions_radiomic_medsam,PR,0.568,0.030,0.586,0.020,0.586,0.020,0.595,0.040
 AMBL_medsam_ER,ambl_lesions_radiomic_medsam_binary,PR [SII],0.605,0.207,0.638,0.108,0.638,0.108,0.682,0.111
 DUKE_HER2,duke_lesions,HER2,0.153,0.081,0.427,0.041,0.427,0.041,0.384,0.064
-AMBL_HER2,ambl_lesions_binary,HER2 [SII],0.7,0.163,0.75,0.129,0.75,0.129,0.722,0.165
+AMBL_HER2,ambl_lesions_binary,HER2 [SII],0.700,0.163,0.750,0.129,0.750,0.129,0.722,0.165
 DUKE_medsam_HER2,duke_lesions_radiomic_medsam,HER2,0.261,0.151,0.501,0.087,0.501,0.087,0.439,0.066
-AMBL_medsam_HER2,ambl_lesions_radiomic_medsam_binary,HER2 [SII],0.607,0.14,0.683,0.111,0.683,0.111,0.656,0.206
+AMBL_medsam_HER2,ambl_lesions_radiomic_medsam_binary,HER2 [SII],0.607,0.140,0.683,0.111,0.683,0.111,0.656,0.206

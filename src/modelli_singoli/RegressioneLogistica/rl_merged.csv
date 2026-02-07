@@ -1,7 +1,3 @@
 experiment,dataset,target,mean_f1,std_f1,mean_accuracy,std_accuracy,mean_balanced_accuracy,std_balanced_accuracy,mean_auc,std_auc
 MERGED_ER,merged_lesions,ER [SII],0.667,0.005,0.523,0.016,0.523,0.016,0.564,0.019
 MERGED_medsam_ER,merged_lesions_medsam,ER [SII],0.675,0.028,0.577,0.040,0.577,0.040,0.598,0.050
-MERGED_HER2,merged_lesions,HER2 [SII],0.135,0.083,0.438,0.027,0.438,0.027,0.477,0.096
-MERGED_medsam_HER2,merged_lesions_medsam,HER2 [SII],0.281,0.037,0.526,0.029,0.526,0.029,0.543,0.033
-MERGED_PR,merged_lesions,PR [SII],0.459,0.038,0.541,0.035,0.541,0.035,0.507,0.039
-MERGED_medsam_PR,merged_lesions_medsam,PR [SII],0.505,0.089,0.541,0.083,0.541,0.083,0.555,0.113
