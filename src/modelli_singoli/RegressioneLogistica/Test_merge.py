@@ -17,7 +17,7 @@ TIPO_FOLD = "kfold"
 BALANCE_TEST = True
 
 # MODIFICATO: Ora c'è un solo target per il dataset merged
-TARGET_COL = "HER2 [SII]"  # Colonna unificata dopo la fusione
+TARGET_COL = "PR [SII]"  # Colonna unificata dopo la fusione
 
 
 # Funzioni
@@ -446,8 +446,8 @@ def train(file_path, csv_name, target_col, tipo_fold, balance_test=False):
 results = {}
 
 results["MERGED_PR"] = train(
-    FILE_PATH / "merged_lesions_medsam.csv",
-    "merged_medsam",
+    FILE_PATH / "merged_lesions.csv",
+    "merged",
     target_col=TARGET_COL,
     tipo_fold=TIPO_FOLD,
     balance_test=BALANCE_TEST

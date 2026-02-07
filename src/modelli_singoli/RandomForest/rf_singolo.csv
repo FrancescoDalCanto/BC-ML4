@@ -1,0 +1,13 @@
+experiment,dataset,target,mean_f1,std_f1,mean_accuracy,std_accuracy,mean_balanced_accuracy,std_balanced_accuracy,mean_auc,std_auc
+DUKE_ER,duke_lesions,ER,0.629,0.057,0.558,0.066,0.558,0.066,0.535,0.071
+AMBL_ER,ambl_lesions_binary,ER [SII],0.669,0.08,0.61,0.084,0.61,0.084,0.65,0.162
+DUKE_medsam_ER,duke_lesions_radiomic_medsam,ER,0.611,0.04,0.536,0.045,0.536,0.045,0.539,0.035
+AMBL_medsam_ER,ambl_lesions_radiomic_medsam_binary,ER [SII],0.757,0.122,0.721,0.113,0.721,0.113,0.734,0.14
+DUKE_HER2,duke_lesions,HER2,0.484,0.134,0.536,0.072,0.536,0.072,0.492,0.101
+AMBL_HER2,ambl_lesions_binary,HER2 [SII],0.293,0.362,0.617,0.145,0.617,0.145,0.656,0.089
+DUKE_medsam_HER2,duke_lesions_radiomic_medsam,HER2,0.466,0.077,0.507,0.069,0.507,0.069,0.459,0.092
+AMBL_medsam_HER2,ambl_lesions_radiomic_medsam_binary,HER2 [SII],0.393,0.335,0.65,0.133,0.65,0.133,0.567,0.229
+DUKE_PR,duke_lesions,PR,0.48,0.087,0.533,0.097,0.533,0.097,0.515,0.112
+AMBL_PR,ambl_lesions_binary,PR [SII],0.645,0.096,0.652,0.121,0.652,0.121,0.706,0.105
+DUKE_medsam_PR,duke_lesions_radiomic_medsam,PR,0.461,0.082,0.504,0.05,0.504,0.05,0.487,0.066
+AMBL_medsam_PR,ambl_lesions_radiomic_medsam_binary,PR [SII],0.553,0.12,0.523,0.148,0.523,0.148,0.596,0.153

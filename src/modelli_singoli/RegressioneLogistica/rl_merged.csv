@@ -1,0 +1,7 @@
+dataset,target,mean_f1,std_f1,mean_accuracy,std_accuracy,mean_balanced_accuracy,std_balanced_accuracy,mean_auc,std_auc
+merged_medsam,ER [SII],0.835,0.034,0.852,0.028,0.852,0.028,0.852,0.028
+merged_medsam,PR [SII],0.86,0.037,0.844,0.045,0.844,0.045,0.844,0.045
+merged_medsam,HER2 [SII],0.264,0.048,0.516,0.026,0.516,0.026,0.526,0.045
+merged,HER2 [SII],0.153,0.057,0.453,0.035,0.453,0.035,0.459,0.087
+merged,ER [SII],0.835,0.034,0.852,0.028,0.852,0.028,0.852,0.028
+merged,PR [SII],0.86,0.037,0.844,0.045,0.844,0.045,0.844,0.045
