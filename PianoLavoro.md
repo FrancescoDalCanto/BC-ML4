@@ -256,3 +256,19 @@ Grazie mille!
 - Chiedi feedback alla relatrice quando hai completato una fase
 
 **Buon lavoro! 💪**
+
+
+
+
+
+
+
+
+
+
+
+L'interpretabilità dei modelli di Machine Learning rappresenta un aspetto cruciale, in particolare in ambito biomedico, dove le decisioni automatiche devono essere non solo accurate, ma anche comprensibili, giustificabili e clinicamente interpretabili. Di conseguenza, in questo contesto si inseriscono le tecniche di feature importance e di explainable artificial intelligence (XAI), il cui obiettivo è quello di chiarire il contributo delle singole variabili di input alle predizioni del modello.
+La feature importance indica una misura quantitativa dell'influenza esercitatta da ciascuna feature sul processo decisionale del modello. Tali misure consentono di identificare le le variabili più informative, fornendo indicazioni utili sia per la validazione del modello sia per la comprensione dei meccanismi sottostanti ai dati analizzati \cite{guyon2003introduction}. Nel campo radiomico, l'analisi dell'importanza delle feature assume un ruolo particolarmente rilevante, poichè permette di collegare le caratteristiche estratte dalle immagini mediche a fenomeni biologici e clinici interpretabili \cite{Lambin2017Radiomics}.
+Le modalità di calcolo della feature importance dipendono dalla tipologia di modello adottato. Nei modelli basati su alberi decisionali, come Random Forest o Gradient Boosting, l’importanza delle feature è spesso stimata in base alla riduzione dell’impurità o al contributo alla funzione obiettivo lungo i nodi decisionali \cite{breiman2001random}. Tuttavia, tali misure possono risultare distorte in presenza di feature correlate o con diversa scala di variabilità \cite{strobl2007bias}. Per questo motivo, sono state sviluppate metodologie alternative, come la permutation importance, che valuta l’impatto della permutazione casuale di una singola feature sulle prestazioni del modello \cite{fisher2019all}.
+% Accanto alle misure globali di feature importance, le tecniche di explainability mirano a fornire spiegazioni sia a livello globale sia a livello locale, ovvero relative a singole predizioni. Tra gli approcci più diffusi rientrano LIME (Local Interpretable Model-agnostic Explanations) \cite{ribeiro2016should} e SHAP (SHapley Additive exPlanations) \cite{lundberg2017unified}. In particolare, SHAP si basa sulla teoria dei giochi cooperativi e consente di attribuire a ciascuna feature un contributo additivo alla predizione finale, garantendo proprietà teoriche di coerenza e consistenza.
+L’utilizzo di tecniche di explainability risulta fondamentale per aumentare la trasparenza dei modelli predittivi e per favorirne l’adozione in contesti clinici reali. In ambito oncologico, tali strumenti permettono di valutare se le predizioni siano guidate da pattern radiomici plausibili dal punto di vista biologico, riducendo il rischio di bias e overfitting \cite{zwanenburg2020image}. Inoltre, l’analisi dell’importanza delle feature può supportare la selezione delle variabili più robuste, migliorando la generalizzabilità dei modelli e la riproducibilità degli studi radiomici \cite{yip2016applications}.

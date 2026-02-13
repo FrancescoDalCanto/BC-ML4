@@ -23,8 +23,8 @@ PATH_CLEANED_DATASET = DATASET_PATH / 'cleaned'
 
 # Lista dei file CSV da processare
 FILENAME = [
-    'ambl_lesions_radiomic_medsam.csv',
-    'ambl_lesions.csv',
+    'medsam_dynamic.csv',
+    'original_dynamic.csv',
 ]
 
 # =========================================================
