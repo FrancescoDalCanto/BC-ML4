@@ -1,0 +1,17 @@
+feature,importance_mean,importance_std
+mean_derivative_phase_3,2.1351,0.4350
+median_derivative_phase_3,2.0831,0.1427
+mean_derivative_phase_2,1.9893,0.4231
+max_derivative_phase_3,1.9888,0.1240
+median_derivative_phase_2,1.9509,0.4931
+std_derivative_phase_2,1.8919,0.3682
+max_derivative_phase_5,1.8683,0.3643
+std_derivative_phase_3,1.8243,0.2527
+max_derivative_phase_4,1.5864,0.2441
+max_derivative_phase_2,1.5393,0.1447
+std_derivative_phase_5,1.5000,0.1896
+mean_derivative_phase_4,1.4980,0.1856
+std_derivative_phase_4,1.4313,0.3376
+median_derivative_phase_4,1.3953,0.1471
+mean_derivative_phase_5,1.3674,0.4810
+median_derivative_phase_5,1.3151,0.1524
